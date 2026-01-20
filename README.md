@@ -1,2 +1,2 @@
-# hn.github.io
+# hatch-network-website.github.io
 Hatch Network home page.
