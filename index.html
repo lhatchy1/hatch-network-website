@@ -31,38 +31,35 @@
             color: var(--text-primary);
             line-height: 1.6;
             display: flex;
+            flex-direction: column;
             min-height: 100vh;
         }
 
-        /* Sidebar */
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Bottom Navigation Bar */
         .sidebar {
-            width: 280px;
+            width: 100%;
             background-color: var(--bg-secondary);
-            border-right: 2px solid var(--border-color);
+            border-top: 2px solid var(--border-color);
             padding: 20px;
-            overflow-y: auto;
-            position: fixed;
-            height: 100vh;
-        }
-
-        .sidebar h1 {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
             text-align: center;
-            color: var(--text-primary);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-        }
-
-        .sidebar h1::before {
-            content: '> ';
+            margin-top: auto;
         }
 
         .sidebar h2 {
             font-size: 0.9rem;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             color: var(--text-secondary);
+            display: inline-block;
+            margin-right: 15px;
         }
 
         .sidebar h2::before {
@@ -71,38 +68,34 @@
 
         .sidebar ul {
             list-style: none;
+            display: inline-block;
+            margin: 0;
         }
 
         .sidebar li {
-            margin: 8px 0;
+            display: inline-block;
+            margin: 0 10px;
         }
 
         .sidebar a {
             color: var(--text-muted);
             text-decoration: none;
             transition: all 0.2s;
-            display: block;
-            padding: 5px 10px;
-            border-left: 2px solid transparent;
+            padding: 8px 20px;
+            border: 1px solid var(--border-color);
+            display: inline-block;
         }
 
         .sidebar a:hover {
             color: var(--text-primary);
-            border-left-color: var(--accent);
             background-color: rgba(0, 255, 65, 0.1);
+            border-color: var(--text-primary);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
         }
 
         .sidebar a::before {
             content: '→ ';
             margin-right: 5px;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 280px;
-            flex: 1;
-            padding: 30px;
-            max-width: 1200px;
         }
 
         .header {
@@ -292,17 +285,23 @@
 
         /* Responsive */
         @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                position: relative;
-                height: auto;
-                border-right: none;
-                border-bottom: 2px solid var(--border-color);
+            .main-content {
+                padding: 20px;
             }
 
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
+            .sidebar h2 {
+                display: block;
+                margin-bottom: 10px;
+            }
+
+            .sidebar li {
+                display: block;
+                margin: 10px 0;
+            }
+
+            .sidebar a {
+                display: block;
+                width: 100%;
             }
         }
 
@@ -326,38 +325,6 @@
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <h1>SERVICES HUB</h1>
-
-        <h2>MEDIA SERVICES</h2>
-        <ul>
-            <li><a href="http://your-plex-url.com" target="_blank">Plex Media Server</a></li>
-            <li><a href="http://your-sonarr-url.com" target="_blank">Sonarr (TV)</a></li>
-            <li><a href="http://your-radarr-url.com" target="_blank">Radarr (Movies)</a></li>
-        </ul>
-
-        <h2>UTILITIES</h2>
-        <ul>
-            <li><a href="http://your-portainer-url.com" target="_blank">Portainer</a></li>
-            <li><a href="http://your-homepage-url.com" target="_blank">Homepage</a></li>
-            <li><a href="http://your-service-url.com" target="_blank">Service Name</a></li>
-        </ul>
-
-        <h2>OTHER SERVICES</h2>
-        <ul>
-            <li><a href="http://your-service1-url.com" target="_blank">Service 1</a></li>
-            <li><a href="http://your-service2-url.com" target="_blank">Service 2</a></li>
-            <li><a href="http://your-service3-url.com" target="_blank">Service 3</a></li>
-        </ul>
-
-        <h2>IMPORTANT LINKS</h2>
-        <ul>
-            <li><a href="https://github.com/yourusername" target="_blank">GitHub</a></li>
-            <li><a href="https://example.com" target="_blank">Documentation</a></li>
-        </ul>
-    </aside>
-
     <!-- Main Content -->
     <main class="main-content">
         <div class="header">
@@ -414,6 +381,14 @@
         </section>
     </main>
 
+    <!-- Bottom Navigation -->
+    <footer class="sidebar">
+        <h2>TEAMSPEAK</h2>
+        <ul>
+            <li><a href="ts3server://ts.hatchnetwork.ch?port=9987">ts3server://ts.hatchnetwork.ch:9987</a></li>
+        </ul>
+    </footer>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -435,7 +410,7 @@
         };
 
         // FormSubmit Email Endpoint (replace with your email)
-        const FORMSUBMIT_EMAIL = "your-email@example.com";
+        const FORMSUBMIT_EMAIL = "plex@hatchnetwork.ch";
 
         // ========================================
         // INITIALIZATION
