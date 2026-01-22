@@ -290,9 +290,9 @@
             margin-top: 8px;
         }
 
-        .status-pending {
-            color: var(--warning);
-            border-color: var(--warning);
+        .status-new {
+            color: #4488ff;
+            border-color: #4488ff;
         }
 
         .status-searching {
@@ -306,8 +306,8 @@
         }
 
         .status-completed {
-            color: var(--complete);
-            border-color: var(--complete);
+            color: #aa44ff;
+            border-color: #aa44ff;
         }
 
         .no-requests {
@@ -437,9 +437,9 @@
             border-color: #ff4444;
         }
 
-        .admin-btn.status-pending {
-            border-color: var(--warning);
-            color: var(--warning);
+        .admin-btn.status-new {
+            border-color: #4488ff;
+            color: #4488ff;
         }
 
         .admin-btn.status-searching {
@@ -453,8 +453,8 @@
         }
 
         .admin-btn.status-completed {
-            border-color: var(--complete);
-            color: var(--complete);
+            border-color: #aa44ff;
+            color: #aa44ff;
         }
 
         .admin-btn.delete {
@@ -841,7 +841,7 @@
                         ${canEdit ? `
                         <div class="admin-controls active" id="controls-${request.id}">
                             ${isAdminMode ? `
-                            <button class="admin-btn status-pending" onclick="changeStatus('${request.id}', 'Pending')">→ PENDING</button>
+                            <button class="admin-btn status-new" onclick="changeStatus('${request.id}', 'New')">→ NEW</button>
                             <button class="admin-btn status-searching" onclick="changeStatus('${request.id}', 'Searching')">→ SEARCHING</button>
                             <button class="admin-btn status-downloading" onclick="changeStatus('${request.id}', 'Downloading')">→ DOWNLOADING</button>
                             <button class="admin-btn status-completed" onclick="changeStatus('${request.id}', 'Completed')">→ COMPLETED</button>
@@ -882,7 +882,7 @@
                 title: document.getElementById('mediaTitle').value.trim(),
                 year: document.getElementById('mediaYear').value.trim(),
                 notes: document.getElementById('additionalNotes').value.trim(),
-                status: 'Pending',
+                status: 'New',
                 timestamp: Date.now(),
                 userId: currentUserId // Store who created this request
             };
@@ -1290,6 +1290,12 @@ This request has been added to your Firebase database and is visible to all user
                         updates[`${id}/status`] = 'Downloading';
                         migrationCount++;
                         console.log(`[Migration] Updating "${data.title}" status: In Progress → Downloading`);
+                    }
+                    // Update "Pending" to "New"
+                    if (data.status === 'Pending') {
+                        updates[`${id}/status`] = 'New';
+                        migrationCount++;
+                        console.log(`[Migration] Updating "${data.title}" status: Pending → New`);
                     }
                 });
 
