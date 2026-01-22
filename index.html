@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Self-Hosted Services Hub</title>
+    <title>Hatch Network</title>
+    <link rel="icon" type="image/svg+xml" href="fist.svg">
     <style>
         * {
             margin: 0;
@@ -105,12 +106,51 @@
             text-align: center;
         }
 
-        .header .logo {
-            max-width: 400px;
-            width: 100%;
-            height: auto;
+        .header .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin: 0 auto 20px;
+            gap: 20px;
+        }
+
+        .header .fist-icon {
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+        }
+
+        .header .logo-text {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .header .logo-text .main {
+            font-size: 2.2rem;
+            color: #00ff41;
             display: block;
+        }
+
+        .header .logo-text .sub {
+            font-size: 1.6rem;
+            color: #33ff66;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .header .logo-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .header .logo-text .main {
+                font-size: 1.8rem;
+            }
+
+            .header .logo-text .sub {
+                font-size: 1.3rem;
+            }
         }
 
         .header h1 {
@@ -494,7 +534,13 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="header">
-            <img src="logo.svg" alt="Hatch Network Logo" class="logo">
+            <div class="logo-container">
+                <img src="fist.svg" alt="Hatch Network Fist" class="fist-icon">
+                <div class="logo-text">
+                    <span class="main">HATCH</span>
+                    <span class="sub">NETWORK</span>
+                </div>
+            </div>
             <h1>MEDIA REQUEST SYSTEM</h1>
             <p>Submit your TV show and movie requests below. All submissions are tracked in the queue below.</p>
         </div>
