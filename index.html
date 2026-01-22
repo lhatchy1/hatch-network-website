@@ -331,6 +331,162 @@
             margin-bottom: 20px;
             display: none;
         }
+
+        /* Admin Mode Styles */
+        .admin-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .admin-toggle:hover {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .admin-toggle.active {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 65, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 65, 0.8); }
+        }
+
+        .admin-controls {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: rgba(0, 255, 65, 0.05);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .admin-controls.active {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .admin-btn {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 5px 15px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .admin-btn:hover {
+            background-color: rgba(0, 255, 65, 0.2);
+            border-color: var(--text-primary);
+        }
+
+        .admin-btn.status-pending {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .admin-btn.status-in-progress {
+            border-color: var(--text-secondary);
+            color: var(--text-secondary);
+        }
+
+        .admin-btn.status-completed {
+            border-color: var(--complete);
+            color: var(--complete);
+        }
+
+        .admin-btn.delete {
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .admin-btn.delete:hover {
+            background-color: rgba(255, 68, 68, 0.2);
+        }
+
+        .admin-badge {
+            display: inline-block;
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            margin-left: 10px;
+            animation: blink 1s infinite;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .modal-content h2::before {
+            content: '# ';
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+            margin-bottom: 20px;
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: var(--text-primary);
+            box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -399,6 +555,22 @@
         </ul>
     </footer>
 
+    <!-- Admin Toggle Button -->
+    <button class="admin-toggle" id="adminToggle">ADMIN MODE</button>
+
+    <!-- Password Modal -->
+    <div class="modal" id="passwordModal">
+        <div class="modal-content">
+            <h2>ADMIN AUTHENTICATION</h2>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">Enter admin password to continue:</p>
+            <input type="password" id="adminPassword" placeholder="Password">
+            <div class="modal-buttons">
+                <button class="btn" onclick="checkAdminPassword()">LOGIN</button>
+                <button class="btn" onclick="closePasswordModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -422,6 +594,9 @@
         // FormSubmit Email Endpoint (replace with your email)
         const FORMSUBMIT_EMAIL = "plex@hatchnetwork.ch";
 
+        // Admin Configuration
+        const ADMIN_PASSWORD = "hatch2024"; // Change this to your desired password
+
         // ========================================
         // INITIALIZATION
         // ========================================
@@ -430,6 +605,9 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const requestsRef = database.ref('requests');
+
+        // Admin mode state
+        let isAdminMode = false;
 
         // ========================================
         // LOAD AND DISPLAY REQUESTS
@@ -459,14 +637,22 @@
 
                     const statusClass = `status-${request.status.toLowerCase().replace(' ', '-')}`;
                     const date = new Date(request.timestamp).toLocaleDateString();
+                    const completedDate = request.completedAt ? new Date(request.completedAt).toLocaleDateString() : 'N/A';
 
                     requestDiv.innerHTML = `
                         <div class="request-title">${request.title} ${request.year ? `(${request.year})` : ''}</div>
                         <div class="request-meta">
                             TYPE: ${request.type} | REQUESTED BY: ${request.requesterName} | DATE: ${date}
+                            ${request.completedAt ? ` | COMPLETED: ${completedDate}` : ''}
                         </div>
                         ${request.notes ? `<div class="request-meta">NOTES: ${request.notes}</div>` : ''}
                         <span class="request-status ${statusClass}">[${request.status.toUpperCase()}]</span>
+                        <div class="admin-controls ${isAdminMode ? 'active' : ''}" id="admin-${request.id}">
+                            <button class="admin-btn status-pending" onclick="changeStatus('${request.id}', 'Pending')">→ PENDING</button>
+                            <button class="admin-btn status-in-progress" onclick="changeStatus('${request.id}', 'In Progress')">→ IN PROGRESS</button>
+                            <button class="admin-btn status-completed" onclick="changeStatus('${request.id}', 'Completed')">→ COMPLETED</button>
+                            <button class="admin-btn delete" onclick="deleteRequest('${request.id}', '${request.title}')">✕ DELETE</button>
+                        </div>
                     `;
 
                     container.appendChild(requestDiv);
@@ -627,6 +813,124 @@ This request has been added to your Firebase database and is visible to all user
 
             } catch (error) {
                 console.error('[Cleanup] Error during cleanup:', error);
+            }
+        }
+
+        // ========================================
+        // ADMIN PANEL FUNCTIONS
+        // ========================================
+
+        // Toggle admin mode
+        document.getElementById('adminToggle').addEventListener('click', function() {
+            if (!isAdminMode) {
+                // Show password modal
+                document.getElementById('passwordModal').classList.add('active');
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('adminPassword').focus();
+            } else {
+                // Disable admin mode
+                isAdminMode = false;
+                this.classList.remove('active');
+                this.textContent = 'ADMIN MODE';
+
+                // Remove admin badge from header if exists
+                const badge = document.querySelector('.admin-badge');
+                if (badge) badge.remove();
+
+                // Reload requests to hide admin controls
+                loadRequests();
+
+                console.log('[Admin] Admin mode disabled');
+            }
+        });
+
+        // Allow Enter key to submit password
+        document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAdminPassword();
+            }
+        });
+
+        // Check admin password
+        function checkAdminPassword() {
+            const password = document.getElementById('adminPassword').value;
+
+            if (password === ADMIN_PASSWORD) {
+                isAdminMode = true;
+                document.getElementById('adminToggle').classList.add('active');
+                document.getElementById('adminToggle').textContent = 'ADMIN MODE';
+
+                // Add admin badge to header
+                const header = document.querySelector('.header h1');
+                if (!document.querySelector('.admin-badge')) {
+                    header.innerHTML += '<span class="admin-badge">ADMIN ACTIVE</span>';
+                }
+
+                closePasswordModal();
+                loadRequests(); // Reload to show admin controls
+
+                console.log('[Admin] Admin mode enabled');
+            } else {
+                alert('INCORRECT PASSWORD');
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('adminPassword').focus();
+            }
+        }
+
+        // Close password modal
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            document.getElementById('adminPassword').value = '';
+        }
+
+        // Change request status
+        async function changeStatus(requestId, newStatus) {
+            if (!isAdminMode) {
+                alert('ADMIN MODE REQUIRED');
+                return;
+            }
+
+            try {
+                const updates = {
+                    status: newStatus
+                };
+
+                // If changing to Completed, add completedAt timestamp
+                if (newStatus === 'Completed') {
+                    updates.completedAt = Date.now();
+                }
+
+                // If changing from Completed to another status, remove completedAt
+                if (newStatus !== 'Completed') {
+                    updates.completedAt = null;
+                }
+
+                await requestsRef.child(requestId).update(updates);
+                console.log(`[Admin] Changed status to: ${newStatus}`);
+
+            } catch (error) {
+                console.error('[Admin] Error changing status:', error);
+                alert(`ERROR: ${error.message}`);
+            }
+        }
+
+        // Delete request
+        async function deleteRequest(requestId, title) {
+            if (!isAdminMode) {
+                alert('ADMIN MODE REQUIRED');
+                return;
+            }
+
+            const confirmed = confirm(`DELETE REQUEST?\n\nTitle: ${title}\n\nThis action cannot be undone.`);
+
+            if (confirmed) {
+                try {
+                    await requestsRef.child(requestId).remove();
+                    console.log(`[Admin] Deleted request: ${title}`);
+                } catch (error) {
+                    console.error('[Admin] Error deleting request:', error);
+                    alert(`ERROR: ${error.message}`);
+                }
             }
         }
 
