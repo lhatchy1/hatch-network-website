@@ -543,7 +543,7 @@
         <section class="request-list">
             <h2>REQUEST QUEUE</h2>
             <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px; font-style: italic;">
-                Note: Completed requests are automatically removed after 7 days.
+                Note: Completed requests are automatically removed after 7 days. You can delete your own requests at any time.
             </p>
             <div id="requestContainer">
                 <div class="loading"></div>
@@ -614,32 +614,50 @@
         // Admin mode state
         let isAdminMode = false;
         let currentUser = null;
+        let currentUserId = null; // Anonymous user ID for request ownership
+
+        // Sign in anonymously for all users
+        auth.signInAnonymously().catch((error) => {
+            console.error('[Auth] Anonymous sign-in error:', error);
+        });
 
         // Monitor authentication state
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // User is signed in
+                // Check if this is an admin or regular user
                 currentUser = user;
-                isAdminMode = true;
-                const toggleBtn = document.getElementById('adminToggle');
-                toggleBtn.classList.add('active');
-                toggleBtn.textContent = 'ADMIN MODE';
+                currentUserId = user.uid;
 
-                // Add admin badge to header
-                const header = document.querySelector('.header h1');
-                if (!document.querySelector('.admin-badge')) {
-                    header.innerHTML += '<span class="admin-badge">ADMIN ACTIVE</span>';
+                // Check if user is admin by checking if they have an email
+                const isAdmin = user.email !== null;
+
+                if (isAdmin) {
+                    // Admin user
+                    isAdminMode = true;
+                    const toggleBtn = document.getElementById('adminToggle');
+                    toggleBtn.classList.add('active');
+                    toggleBtn.textContent = 'ADMIN MODE';
+
+                    // Add admin badge to header
+                    const header = document.querySelector('.header h1');
+                    if (!document.querySelector('.admin-badge')) {
+                        header.innerHTML += '<span class="admin-badge">ADMIN ACTIVE</span>';
+                    }
+
+                    console.log('[Admin] Authenticated as:', user.email);
+
+                    // Run cleanup when admin signs in
+                    cleanupOldCompletedRequests();
+                } else {
+                    // Anonymous user
+                    console.log('[Auth] Signed in anonymously:', user.uid);
                 }
 
-                console.log('[Admin] Authenticated as:', user.email);
-
-                // Run cleanup when admin signs in
-                cleanupOldCompletedRequests();
-
-                loadRequests(); // Reload to show admin controls
+                loadRequests(); // Reload to show controls
             } else {
                 // User is signed out
                 currentUser = null;
+                currentUserId = null;
                 isAdminMode = false;
                 const toggleBtn = document.getElementById('adminToggle');
                 toggleBtn.classList.remove('active');
@@ -649,8 +667,12 @@
                 const badge = document.querySelector('.admin-badge');
                 if (badge) badge.remove();
 
-                console.log('[Admin] Signed out');
-                loadRequests(); // Reload to hide admin controls
+                console.log('[Auth] Signed out');
+
+                // Try to sign in anonymously again
+                auth.signInAnonymously().catch((error) => {
+                    console.error('[Auth] Anonymous sign-in error:', error);
+                });
             }
         });
 
@@ -684,6 +706,10 @@
                     const date = new Date(request.timestamp).toLocaleDateString();
                     const completedDate = request.completedAt ? new Date(request.completedAt).toLocaleDateString() : 'N/A';
 
+                    // Check if current user can edit this request
+                    const isOwner = request.userId === currentUserId;
+                    const canEdit = isAdminMode || isOwner;
+
                     requestDiv.innerHTML = `
                         <div class="request-title">${request.title} ${request.year ? `(${request.year})` : ''}</div>
                         <div class="request-meta">
@@ -692,12 +718,16 @@
                         </div>
                         ${request.notes ? `<div class="request-meta">NOTES: ${request.notes}</div>` : ''}
                         <span class="request-status ${statusClass}">[${request.status.toUpperCase()}]</span>
-                        <div class="admin-controls ${isAdminMode ? 'active' : ''}" id="admin-${request.id}">
+                        ${canEdit ? `
+                        <div class="admin-controls active" id="controls-${request.id}">
+                            ${isAdminMode ? `
                             <button class="admin-btn status-pending" onclick="changeStatus('${request.id}', 'Pending')">→ PENDING</button>
                             <button class="admin-btn status-in-progress" onclick="changeStatus('${request.id}', 'In Progress')">→ IN PROGRESS</button>
                             <button class="admin-btn status-completed" onclick="changeStatus('${request.id}', 'Completed')">→ COMPLETED</button>
+                            ` : ''}
                             <button class="admin-btn delete" onclick="deleteRequest('${request.id}', '${request.title}')">✕ DELETE</button>
                         </div>
+                        ` : ''}
                     `;
 
                     container.appendChild(requestDiv);
@@ -729,7 +759,8 @@
                 year: document.getElementById('mediaYear').value.trim(),
                 notes: document.getElementById('additionalNotes').value.trim(),
                 status: 'Pending',
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                userId: currentUserId // Store who created this request
             };
 
             try {
@@ -989,21 +1020,32 @@ This request has been added to your Firebase database and is visible to all user
 
         // Delete request
         async function deleteRequest(requestId, title) {
-            if (!isAdminMode) {
-                alert('ADMIN MODE REQUIRED');
-                return;
-            }
+            // Check if user has permission (admin or owner)
+            try {
+                const snapshot = await requestsRef.child(requestId).once('value');
+                const request = snapshot.val();
 
-            const confirmed = confirm(`DELETE REQUEST?\n\nTitle: ${title}\n\nThis action cannot be undone.`);
-
-            if (confirmed) {
-                try {
-                    await requestsRef.child(requestId).remove();
-                    console.log(`[Admin] Deleted request: ${title}`);
-                } catch (error) {
-                    console.error('[Admin] Error deleting request:', error);
-                    alert(`ERROR: ${error.message}`);
+                if (!request) {
+                    alert('ERROR: Request not found');
+                    return;
                 }
+
+                const isOwner = request.userId === currentUserId;
+
+                if (!isAdminMode && !isOwner) {
+                    alert('PERMISSION DENIED: You can only delete your own requests');
+                    return;
+                }
+
+                const confirmed = confirm(`DELETE REQUEST?\n\nTitle: ${title}\n\nThis action cannot be undone.`);
+
+                if (confirmed) {
+                    await requestsRef.child(requestId).remove();
+                    console.log(`[User] Deleted request: ${title}`);
+                }
+            } catch (error) {
+                console.error('[User] Error deleting request:', error);
+                alert(`ERROR: ${error.message}`);
             }
         }
 

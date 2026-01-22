@@ -21,9 +21,20 @@ Your admin panel now uses **Firebase Authentication** instead of client-side pas
 3. Click **Authentication** in the left sidebar
 4. Click **Get Started** (if not already enabled)
 5. Go to **Sign-in method** tab
+
+### Enable Email/Password (for admins):
 6. Click **Email/Password**
 7. Enable **Email/Password** (toggle it ON)
 8. Click **Save**
+
+### Enable Anonymous Authentication (for regular users):
+9. Click **Anonymous**
+10. Enable **Anonymous** (toggle it ON)
+11. Click **Save**
+
+**Why both methods?**
+- **Email/Password**: For admin accounts with full control
+- **Anonymous**: For regular users who can edit only their own requests
 
 ---
 
@@ -57,7 +68,7 @@ firebase.auth().createUserWithEmailAndPassword('admin@hatchnetwork.ch', 'YourStr
 
 ## Step 3: Configure Firebase Security Rules
 
-To secure your database and prevent unauthorized access, update your Firebase Realtime Database Rules:
+To secure your database and allow users to edit their own requests, update your Firebase Realtime Database Rules:
 
 1. Go to Firebase Console → **Realtime Database**
 2. Click the **Rules** tab
@@ -68,11 +79,13 @@ To secure your database and prevent unauthorized access, update your Firebase Re
   "rules": {
     "requests": {
       ".read": true,
-      ".write": "auth != null",
       "$requestId": {
-        ".read": true,
-        ".write": "auth != null",
-        ".validate": "newData.hasChildren(['requesterName', 'type', 'title', 'status', 'timestamp'])"
+        ".write": "auth != null && (
+          !data.exists() ||
+          data.child('userId').val() === auth.uid ||
+          auth.token.email != null
+        )",
+        ".validate": "newData.hasChildren(['requesterName', 'type', 'title', 'status', 'timestamp', 'userId'])"
       }
     }
   }
@@ -81,10 +94,26 @@ To secure your database and prevent unauthorized access, update your Firebase Re
 
 ### What these rules do:
 
-- ✅ **Anyone can READ** requests (needed for public viewing)
-- ✅ **Only authenticated users can WRITE** (create, update, delete)
-- ✅ **Data validation** ensures requests have required fields
-- ✅ **Prevents anonymous users** from modifying data
+- ✅ **Anyone can READ** requests (public viewing)
+- ✅ **Authenticated users can CREATE** requests (including anonymous users)
+- ✅ **Users can DELETE their own** requests (userId matches auth.uid)
+- ✅ **Admin users (with email) can modify/delete ANY** request
+- ✅ **Data validation** ensures requests have required fields including userId
+
+### How it works:
+
+**Regular Users (Anonymous):**
+- Automatically signed in when they visit the site
+- Can submit requests
+- Can delete their own requests only
+- Cannot change status of requests
+- User ID persists in browser (until they clear data)
+
+**Admin Users (Email/Password):**
+- Sign in via ADMIN MODE button
+- Can modify/delete ANY request
+- Can change status (Pending → In Progress → Completed)
+- Full administrative control
 
 4. Click **Publish** to apply the rules
 
