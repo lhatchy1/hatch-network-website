@@ -111,6 +111,71 @@
             height: auto;
             margin: 0 auto 20px;
             display: block;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .header .logo:hover {
+            opacity: 0.8;
+        }
+
+        /* Pong Game Easter Egg */
+        #pongGame {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--bg-primary);
+            border: 3px solid var(--border-color);
+            display: none;
+            z-index: 3000;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
+        }
+
+        #pongGame.active {
+            display: block;
+        }
+
+        .pong-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            z-index: 2999;
+        }
+
+        .pong-overlay.active {
+            display: block;
+        }
+
+        .pong-info {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            z-index: 3001;
+            display: none;
+            text-align: center;
+        }
+
+        .pong-info.active {
+            display: block;
+        }
+
+        .pong-info .score {
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .pong-info .instructions {
+            font-size: 0.8rem;
+            color: var(--text-muted);
         }
 
         .header h1 {
@@ -587,7 +652,7 @@
         <section class="request-list">
             <h2>REQUEST QUEUE</h2>
             <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px; font-style: italic;">
-                Note: Completed requests are automatically removed after 7 days. You can delete your own requests at any time.
+                Note: Completed requests are automatically removed after 7 days. You can edit or delete your own requests at any time.
             </p>
             <div id="requestContainer">
                 <div class="loading"></div>
@@ -608,6 +673,16 @@
 
     <!-- Admin Toggle Button -->
     <button class="admin-toggle" id="adminToggle">ADMIN MODE</button>
+
+    <!-- Pong Game Easter Egg -->
+    <div class="pong-overlay" id="pongOverlay"></div>
+    <div class="pong-info" id="pongInfo">
+        <div class="score">SCORE: <span id="pongScore">0</span></div>
+        <div class="instructions">
+            USE MOUSE TO MOVE PADDLE | CLICK TO CLOSE
+        </div>
+    </div>
+    <canvas id="pongGame" width="600" height="400"></canvas>
 
     <!-- Password Modal -->
     <div class="modal" id="passwordModal">
@@ -1257,6 +1332,166 @@ This request has been added to your Firebase database and is visible to all user
                 console.error('[Migration] Error during migration:', error);
             }
         }
+
+        // ========================================
+        // PONG GAME EASTER EGG
+        // ========================================
+
+        let pongActive = false;
+        let pongScore = 0;
+        let pongAnimationId = null;
+
+        // Pong game state
+        const pong = {
+            canvas: null,
+            ctx: null,
+            paddle: { x: 275, y: 360, width: 50, height: 10, speed: 0 },
+            ball: { x: 300, y: 200, radius: 5, dx: 3, dy: -3 },
+            score: 0
+        };
+
+        // Initialize pong game
+        function initPong() {
+            pong.canvas = document.getElementById('pongGame');
+            pong.ctx = pong.canvas.getContext('2d');
+
+            // Reset game state
+            pong.paddle.x = 275;
+            pong.ball.x = 300;
+            pong.ball.y = 200;
+            pong.ball.dx = 3;
+            pong.ball.dy = -3;
+            pong.score = 0;
+
+            updatePongScore();
+        }
+
+        // Update score display
+        function updatePongScore() {
+            document.getElementById('pongScore').textContent = pong.score;
+        }
+
+        // Draw paddle
+        function drawPaddle() {
+            pong.ctx.fillStyle = '#00ff41';
+            pong.ctx.fillRect(pong.paddle.x, pong.paddle.y, pong.paddle.width, pong.paddle.height);
+        }
+
+        // Draw ball
+        function drawBall() {
+            pong.ctx.beginPath();
+            pong.ctx.arc(pong.ball.x, pong.ball.y, pong.ball.radius, 0, Math.PI * 2);
+            pong.ctx.fillStyle = '#00ff41';
+            pong.ctx.fill();
+            pong.ctx.closePath();
+        }
+
+        // Update ball position
+        function updateBall() {
+            pong.ball.x += pong.ball.dx;
+            pong.ball.y += pong.ball.dy;
+
+            // Ball collision with walls
+            if (pong.ball.x + pong.ball.radius > pong.canvas.width || pong.ball.x - pong.ball.radius < 0) {
+                pong.ball.dx = -pong.ball.dx;
+            }
+
+            // Ball collision with top
+            if (pong.ball.y - pong.ball.radius < 0) {
+                pong.ball.dy = -pong.ball.dy;
+            }
+
+            // Ball collision with paddle
+            if (pong.ball.y + pong.ball.radius > pong.paddle.y &&
+                pong.ball.x > pong.paddle.x &&
+                pong.ball.x < pong.paddle.x + pong.paddle.width) {
+                pong.ball.dy = -pong.ball.dy;
+                pong.score++;
+                updatePongScore();
+
+                // Increase difficulty slightly
+                pong.ball.dx *= 1.02;
+                pong.ball.dy *= 1.02;
+            }
+
+            // Ball falls off bottom - reset
+            if (pong.ball.y - pong.ball.radius > pong.canvas.height) {
+                pong.ball.x = 300;
+                pong.ball.y = 200;
+                pong.ball.dx = 3 * (Math.random() > 0.5 ? 1 : -1);
+                pong.ball.dy = -3;
+                pong.score = Math.max(0, pong.score - 1);
+                updatePongScore();
+            }
+        }
+
+        // Game loop
+        function pongLoop() {
+            if (!pongActive) return;
+
+            pong.ctx.clearRect(0, 0, pong.canvas.width, pong.canvas.height);
+
+            drawPaddle();
+            drawBall();
+            updateBall();
+
+            pongAnimationId = requestAnimationFrame(pongLoop);
+        }
+
+        // Open pong game
+        function openPong() {
+            pongActive = true;
+            document.getElementById('pongGame').classList.add('active');
+            document.getElementById('pongOverlay').classList.add('active');
+            document.getElementById('pongInfo').classList.add('active');
+
+            initPong();
+            pongLoop();
+        }
+
+        // Close pong game
+        function closePong() {
+            pongActive = false;
+            document.getElementById('pongGame').classList.remove('active');
+            document.getElementById('pongOverlay').classList.remove('active');
+            document.getElementById('pongInfo').classList.remove('active');
+
+            if (pongAnimationId) {
+                cancelAnimationFrame(pongAnimationId);
+            }
+        }
+
+        // Mouse move handler for paddle
+        document.addEventListener('mousemove', function(e) {
+            if (!pongActive) return;
+
+            const canvas = document.getElementById('pongGame');
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+
+            pong.paddle.x = mouseX - pong.paddle.width / 2;
+
+            // Keep paddle within bounds
+            if (pong.paddle.x < 0) pong.paddle.x = 0;
+            if (pong.paddle.x + pong.paddle.width > canvas.width) {
+                pong.paddle.x = canvas.width - pong.paddle.width;
+            }
+        });
+
+        // Click to close pong game
+        document.getElementById('pongOverlay').addEventListener('click', closePong);
+        document.getElementById('pongGame').addEventListener('click', closePong);
+
+        // Logo click to open pong
+        document.addEventListener('DOMContentLoaded', function() {
+            const logo = document.querySelector('.header .logo');
+            if (logo) {
+                logo.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openPong();
+                });
+            }
+        });
 
         // ========================================
         // INITIALIZE ON PAGE LOAD
