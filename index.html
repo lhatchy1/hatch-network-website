@@ -105,33 +105,12 @@
             text-align: center;
         }
 
-        .header .logo-text {
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            line-height: 1.2;
-            margin-bottom: 20px;
-        }
-
-        .header .logo-text .main {
-            font-size: 2.2rem;
-            color: #00ff41;
+        .header .logo {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+            margin: 0 auto 20px;
             display: block;
-        }
-
-        .header .logo-text .sub {
-            font-size: 1.6rem;
-            color: #33ff66;
-            display: block;
-        }
-
-        @media (max-width: 768px) {
-            .header .logo-text .main {
-                font-size: 1.8rem;
-            }
-
-            .header .logo-text .sub {
-                font-size: 1.3rem;
-            }
         }
 
         .header h1 {
@@ -515,10 +494,7 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="header">
-            <div class="logo-text">
-                <span class="main">HATCH</span>
-                <span class="sub">NETWORK</span>
-            </div>
+            <img src="logo.svg" alt="Hatch Network Logo" class="logo">
             <h1>MEDIA REQUEST SYSTEM</h1>
             <p>Submit your TV show and movie requests below. All submissions are tracked in the queue below.</p>
         </div>
