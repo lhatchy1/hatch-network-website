@@ -572,9 +572,72 @@ This request has been added to your Firebase database and is visible to all user
         }
 
         // ========================================
+        // AUTOMATIC CLEANUP OF OLD COMPLETED REQUESTS
+        // ========================================
+
+        async function cleanupOldCompletedRequests() {
+            const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+            const cutoffTime = Date.now() - SEVEN_DAYS_MS;
+
+            try {
+                const snapshot = await requestsRef.once('value');
+                const requests = snapshot.val();
+
+                if (!requests) {
+                    console.log('[Cleanup] No requests to clean up.');
+                    return;
+                }
+
+                let deletedCount = 0;
+                let timestampedCount = 0;
+                const updates = {};
+
+                Object.entries(requests).forEach(([id, data]) => {
+                    // Check if request is completed
+                    if (data.status === 'Completed') {
+                        // If no completedAt timestamp exists, add one (set to now)
+                        if (!data.completedAt) {
+                            console.log(`[Cleanup] Adding completedAt timestamp to: ${data.title}`);
+                            updates[`${id}/completedAt`] = Date.now();
+                            timestampedCount++;
+                        } else {
+                            // If completed more than 7 days ago, mark for deletion
+                            if (data.completedAt < cutoffTime) {
+                                console.log(`[Cleanup] Removing old completed request: ${data.title} (completed ${new Date(data.completedAt).toLocaleDateString()})`);
+                                updates[id] = null; // null value deletes the entry
+                                deletedCount++;
+                            }
+                        }
+                    }
+                });
+
+                // Apply all updates at once
+                if (Object.keys(updates).length > 0) {
+                    await requestsRef.update(updates);
+
+                    if (deletedCount > 0) {
+                        console.log(`[Cleanup] Successfully removed ${deletedCount} old completed request(s).`);
+                    }
+                    if (timestampedCount > 0) {
+                        console.log(`[Cleanup] Added completion timestamps to ${timestampedCount} request(s).`);
+                    }
+                } else {
+                    console.log('[Cleanup] No cleanup needed.');
+                }
+
+            } catch (error) {
+                console.error('[Cleanup] Error during cleanup:', error);
+            }
+        }
+
+        // ========================================
         // INITIALIZE ON PAGE LOAD
         // ========================================
 
+        // Run cleanup on page load
+        cleanupOldCompletedRequests();
+
+        // Load and display requests
         loadRequests();
     </script>
 </body>
