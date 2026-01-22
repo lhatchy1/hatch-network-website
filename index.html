@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hatch Network</title>
-    <link rel="icon" type="image/svg+xml" href="fist.svg">
     <style>
         * {
             margin: 0;
@@ -106,24 +105,11 @@
             text-align: center;
         }
 
-        .header .logo-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            gap: 20px;
-        }
-
-        .header .fist-icon {
-            width: 60px;
-            height: 60px;
-            flex-shrink: 0;
-        }
-
         .header .logo-text {
             font-family: 'Courier New', monospace;
             font-weight: bold;
             line-height: 1.2;
+            margin-bottom: 20px;
         }
 
         .header .logo-text .main {
@@ -139,11 +125,6 @@
         }
 
         @media (max-width: 768px) {
-            .header .logo-container {
-                flex-direction: column;
-                gap: 10px;
-            }
-
             .header .logo-text .main {
                 font-size: 1.8rem;
             }
@@ -534,12 +515,9 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="header">
-            <div class="logo-container">
-                <img src="fist.svg" alt="Hatch Network Fist" class="fist-icon">
-                <div class="logo-text">
-                    <span class="main">HATCH</span>
-                    <span class="sub">NETWORK</span>
-                </div>
+            <div class="logo-text">
+                <span class="main">HATCH</span>
+                <span class="sub">NETWORK</span>
             </div>
             <h1>MEDIA REQUEST SYSTEM</h1>
             <p>Submit your TV show and movie requests below. All submissions are tracked in the queue below.</p>
@@ -588,6 +566,9 @@
         <!-- Request List -->
         <section class="request-list">
             <h2>REQUEST QUEUE</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px; font-style: italic;">
+                Note: Completed requests are automatically removed after 7 days.
+            </p>
             <div id="requestContainer">
                 <div class="loading"></div>
             </div>
