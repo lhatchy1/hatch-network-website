@@ -84,8 +84,7 @@ To secure your database and allow users to edit their own requests, update your 
           !data.exists() ||
           data.child('userId').val() === auth.uid ||
           auth.token.email != null
-        )",
-        ".validate": "newData.hasChildren(['requesterName', 'type', 'title', 'status', 'timestamp', 'userId'])"
+        )"
       }
     }
   }
