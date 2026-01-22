@@ -628,6 +628,10 @@
                 }
 
                 console.log('[Admin] Authenticated as:', user.email);
+
+                // Run cleanup when admin signs in
+                cleanupOldCompletedRequests();
+
                 loadRequests(); // Reload to show admin controls
             } else {
                 // User is signed out
@@ -1003,10 +1007,8 @@ This request has been added to your Firebase database and is visible to all user
         // INITIALIZE ON PAGE LOAD
         // ========================================
 
-        // Run cleanup on page load
-        cleanupOldCompletedRequests();
-
         // Load and display requests
+        // Note: Cleanup only runs when admin is authenticated (see auth.onAuthStateChanged)
         loadRequests();
     </script>
 </body>
