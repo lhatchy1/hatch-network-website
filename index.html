@@ -259,7 +259,12 @@
             border-color: var(--warning);
         }
 
-        .status-in-progress {
+        .status-searching {
+            color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .status-downloading {
             color: var(--text-secondary);
             border-color: var(--text-secondary);
         }
@@ -401,7 +406,12 @@
             color: var(--warning);
         }
 
-        .admin-btn.status-in-progress {
+        .admin-btn.status-searching {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .admin-btn.status-downloading {
             border-color: var(--text-secondary);
             color: var(--text-secondary);
         }
@@ -487,6 +497,40 @@
 
         .modal-buttons button {
             flex: 1;
+        }
+
+        .modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+            resize: vertical;
+            min-height: 80px;
+            margin-bottom: 20px;
+        }
+
+        .modal-content textarea:focus {
+            outline: none;
+            border-color: var(--text-primary);
+            box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
+        }
+
+        .modal-content select {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+            margin-bottom: 20px;
+        }
+
+        .modal-content select:focus {
+            outline: none;
+            border-color: var(--text-primary);
+            box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
         }
     </style>
 </head>
@@ -580,6 +624,31 @@
         </div>
     </div>
 
+    <!-- Edit Request Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h2>EDIT REQUEST</h2>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">Update your request details:</p>
+            <input type="hidden" id="editRequestId">
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">TYPE</label>
+            <select id="editMediaType">
+                <option value="TV Show">TV Show</option>
+                <option value="Movie">Movie</option>
+            </select>
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">TITLE</label>
+            <input type="text" id="editMediaTitle" placeholder="Title">
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">YEAR (OPTIONAL)</label>
+            <input type="text" id="editMediaYear" placeholder="Year">
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">NOTES (OPTIONAL)</label>
+            <textarea id="editMediaNotes" placeholder="Additional notes"></textarea>
+            <div id="editError" style="color: var(--error); font-size: 0.85rem; margin-bottom: 15px; display: none;"></div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="saveEditRequest()">SAVE</button>
+                <button class="btn" onclick="closeEditModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -649,8 +718,9 @@
 
                     console.log('[Admin] Authenticated as:', user.email);
 
-                    // Run cleanup when admin signs in
+                    // Run cleanup and migration when admin signs in
                     cleanupOldCompletedRequests();
+                    migrateStatusValues();
                 } else {
                     // Anonymous user
                     console.log('[Auth] Signed in anonymously:', user.uid);
@@ -725,8 +795,12 @@
                         <div class="admin-controls active" id="controls-${request.id}">
                             ${isAdminMode ? `
                             <button class="admin-btn status-pending" onclick="changeStatus('${request.id}', 'Pending')">→ PENDING</button>
-                            <button class="admin-btn status-in-progress" onclick="changeStatus('${request.id}', 'In Progress')">→ IN PROGRESS</button>
+                            <button class="admin-btn status-searching" onclick="changeStatus('${request.id}', 'Searching')">→ SEARCHING</button>
+                            <button class="admin-btn status-downloading" onclick="changeStatus('${request.id}', 'Downloading')">→ DOWNLOADING</button>
                             <button class="admin-btn status-completed" onclick="changeStatus('${request.id}', 'Completed')">→ COMPLETED</button>
+                            ` : ''}
+                            ${isOwner && !isAdminMode ? `
+                            <button class="admin-btn" onclick="openEditModal('${request.id}')">✎ EDIT</button>
                             ` : ''}
                             <button class="admin-btn delete" onclick="deleteRequest('${request.id}', '${request.title}')">✕ DELETE</button>
                         </div>
@@ -1049,6 +1123,138 @@ This request has been added to your Firebase database and is visible to all user
             } catch (error) {
                 console.error('[User] Error deleting request:', error);
                 alert(`ERROR: ${error.message}`);
+            }
+        }
+
+        // Open edit modal
+        async function openEditModal(requestId) {
+            try {
+                const snapshot = await requestsRef.child(requestId).once('value');
+                const request = snapshot.val();
+
+                if (!request) {
+                    alert('ERROR: Request not found');
+                    return;
+                }
+
+                const isOwner = request.userId === currentUserId;
+
+                if (!isAdminMode && !isOwner) {
+                    alert('PERMISSION DENIED: You can only edit your own requests');
+                    return;
+                }
+
+                // Populate form with current values
+                document.getElementById('editRequestId').value = requestId;
+                document.getElementById('editMediaType').value = request.type;
+                document.getElementById('editMediaTitle').value = request.title;
+                document.getElementById('editMediaYear').value = request.year || '';
+                document.getElementById('editMediaNotes').value = request.notes || '';
+                document.getElementById('editError').style.display = 'none';
+
+                // Show modal
+                document.getElementById('editModal').classList.add('active');
+                document.getElementById('editMediaTitle').focus();
+            } catch (error) {
+                console.error('[User] Error opening edit modal:', error);
+                alert(`ERROR: ${error.message}`);
+            }
+        }
+
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            document.getElementById('editRequestId').value = '';
+            document.getElementById('editMediaType').value = '';
+            document.getElementById('editMediaTitle').value = '';
+            document.getElementById('editMediaYear').value = '';
+            document.getElementById('editMediaNotes').value = '';
+            document.getElementById('editError').style.display = 'none';
+        }
+
+        // Save edited request
+        async function saveEditRequest() {
+            const requestId = document.getElementById('editRequestId').value;
+            const type = document.getElementById('editMediaType').value;
+            const title = document.getElementById('editMediaTitle').value.trim();
+            const year = document.getElementById('editMediaYear').value.trim();
+            const notes = document.getElementById('editMediaNotes').value.trim();
+            const errorDiv = document.getElementById('editError');
+
+            if (!title) {
+                errorDiv.textContent = 'Title is required';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const snapshot = await requestsRef.child(requestId).once('value');
+                const request = snapshot.val();
+
+                if (!request) {
+                    alert('ERROR: Request not found');
+                    closeEditModal();
+                    return;
+                }
+
+                const isOwner = request.userId === currentUserId;
+
+                if (!isAdminMode && !isOwner) {
+                    alert('PERMISSION DENIED: You can only edit your own requests');
+                    closeEditModal();
+                    return;
+                }
+
+                const updates = {
+                    type: type,
+                    title: title,
+                    year: year,
+                    notes: notes
+                };
+
+                await requestsRef.child(requestId).update(updates);
+                console.log(`[User] Updated request: ${title}`);
+                closeEditModal();
+
+            } catch (error) {
+                console.error('[User] Error saving request:', error);
+                errorDiv.textContent = `ERROR: ${error.message}`;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Migrate old status values to new ones
+        async function migrateStatusValues() {
+            try {
+                const snapshot = await requestsRef.once('value');
+                const requests = snapshot.val();
+
+                if (!requests) {
+                    console.log('[Migration] No requests to migrate.');
+                    return;
+                }
+
+                const updates = {};
+                let migrationCount = 0;
+
+                Object.entries(requests).forEach(([id, data]) => {
+                    // Update "In Progress" to "Downloading"
+                    if (data.status === 'In Progress') {
+                        updates[`${id}/status`] = 'Downloading';
+                        migrationCount++;
+                        console.log(`[Migration] Updating "${data.title}" status: In Progress → Downloading`);
+                    }
+                });
+
+                if (Object.keys(updates).length > 0) {
+                    await requestsRef.update(updates);
+                    console.log(`[Migration] Successfully migrated ${migrationCount} request(s).`);
+                } else {
+                    console.log('[Migration] No migration needed.');
+                }
+
+            } catch (error) {
+                console.error('[Migration] Error during migration:', error);
             }
         }
 
