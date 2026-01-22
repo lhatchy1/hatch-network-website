@@ -349,28 +349,29 @@
         }
 
         .admin-toggle:hover {
-            background-color: var(--accent);
+            background-color: #ff4444;
             color: var(--bg-primary);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
         }
 
         .admin-toggle.active {
-            background-color: var(--accent);
+            background-color: #ff4444;
             color: var(--bg-primary);
+            border-color: #ff4444;
             animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 65, 0.5); }
-            50% { box-shadow: 0 0 20px rgba(0, 255, 65, 0.8); }
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 68, 68, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 68, 68, 0.8); }
         }
 
         .admin-controls {
             display: none;
             margin-top: 10px;
             padding: 10px;
-            background-color: rgba(0, 255, 65, 0.05);
-            border-top: 1px solid var(--border-color);
+            background-color: rgba(255, 68, 68, 0.05);
+            border-top: 1px solid #ff4444;
         }
 
         .admin-controls.active {
@@ -391,8 +392,8 @@
         }
 
         .admin-btn:hover {
-            background-color: rgba(0, 255, 65, 0.2);
-            border-color: var(--text-primary);
+            background-color: rgba(255, 68, 68, 0.2);
+            border-color: #ff4444;
         }
 
         .admin-btn.status-pending {
@@ -421,7 +422,7 @@
 
         .admin-badge {
             display: inline-block;
-            background-color: var(--accent);
+            background-color: #ff4444;
             color: var(--bg-primary);
             padding: 2px 8px;
             font-size: 0.7rem;
