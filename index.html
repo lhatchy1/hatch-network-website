@@ -562,10 +562,12 @@
     <div class="modal" id="passwordModal">
         <div class="modal-content">
             <h2>ADMIN AUTHENTICATION</h2>
-            <p style="color: var(--text-muted); margin-bottom: 15px;">Enter admin password to continue:</p>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">Sign in with your admin account:</p>
+            <input type="email" id="adminEmail" placeholder="Email" style="margin-bottom: 10px;">
             <input type="password" id="adminPassword" placeholder="Password">
+            <div id="authError" style="color: var(--error); font-size: 0.85rem; margin-top: 10px; display: none;"></div>
             <div class="modal-buttons">
-                <button class="btn" onclick="checkAdminPassword()">LOGIN</button>
+                <button class="btn" onclick="signInAdmin()">LOGIN</button>
                 <button class="btn" onclick="closePasswordModal()">CANCEL</button>
             </div>
         </div>
@@ -573,6 +575,7 @@
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <script>
@@ -594,23 +597,54 @@
         // FormSubmit Email Endpoint (replace with your email)
         const FORMSUBMIT_EMAIL = "plex@hatchnetwork.ch";
 
-        // Admin Configuration - Password Hash (SHA-256)
-        // Current password: "hatch2024"
-        // To generate a new hash, open browser console and run:
-        // await crypto.subtle.digest('SHA-256', new TextEncoder().encode('your-password')).then(h => console.log(Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join('')))
-        const ADMIN_PASSWORD_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
-
         // ========================================
         // INITIALIZATION
         // ========================================
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const database = firebase.database();
         const requestsRef = database.ref('requests');
 
         // Admin mode state
         let isAdminMode = false;
+        let currentUser = null;
+
+        // Monitor authentication state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in
+                currentUser = user;
+                isAdminMode = true;
+                const toggleBtn = document.getElementById('adminToggle');
+                toggleBtn.classList.add('active');
+                toggleBtn.textContent = 'ADMIN MODE';
+
+                // Add admin badge to header
+                const header = document.querySelector('.header h1');
+                if (!document.querySelector('.admin-badge')) {
+                    header.innerHTML += '<span class="admin-badge">ADMIN ACTIVE</span>';
+                }
+
+                console.log('[Admin] Authenticated as:', user.email);
+                loadRequests(); // Reload to show admin controls
+            } else {
+                // User is signed out
+                currentUser = null;
+                isAdminMode = false;
+                const toggleBtn = document.getElementById('adminToggle');
+                toggleBtn.classList.remove('active');
+                toggleBtn.textContent = 'ADMIN MODE';
+
+                // Remove admin badge
+                const badge = document.querySelector('.admin-badge');
+                if (badge) badge.remove();
+
+                console.log('[Admin] Signed out');
+                loadRequests(); // Reload to hide admin controls
+            }
+        });
 
         // ========================================
         // LOAD AND DISPLAY REQUESTS
@@ -826,74 +860,92 @@ This request has been added to your Firebase database and is visible to all user
         // Toggle admin mode
         document.getElementById('adminToggle').addEventListener('click', function() {
             if (!isAdminMode) {
-                // Show password modal
+                // Show sign-in modal
                 document.getElementById('passwordModal').classList.add('active');
+                document.getElementById('adminEmail').value = '';
                 document.getElementById('adminPassword').value = '';
-                document.getElementById('adminPassword').focus();
+                document.getElementById('authError').style.display = 'none';
+                document.getElementById('adminEmail').focus();
             } else {
-                // Disable admin mode
-                isAdminMode = false;
-                this.classList.remove('active');
-                this.textContent = 'ADMIN MODE';
-
-                // Remove admin badge from header if exists
-                const badge = document.querySelector('.admin-badge');
-                if (badge) badge.remove();
-
-                // Reload requests to hide admin controls
-                loadRequests();
-
-                console.log('[Admin] Admin mode disabled');
+                // Sign out
+                signOutAdmin();
             }
         });
 
-        // Allow Enter key to submit password
+        // Allow Enter key to submit
+        document.getElementById('adminEmail').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('adminPassword').focus();
+            }
+        });
+
         document.getElementById('adminPassword').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                checkAdminPassword();
+                signInAdmin();
             }
         });
 
-        // Hash password using SHA-256
-        async function hashPassword(password) {
-            const msgBuffer = new TextEncoder().encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            return hashHex;
-        }
-
-        // Check admin password
-        async function checkAdminPassword() {
+        // Sign in with Firebase Auth
+        async function signInAdmin() {
+            const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value;
-            const passwordHash = await hashPassword(password);
+            const errorDiv = document.getElementById('authError');
 
-            if (passwordHash === ADMIN_PASSWORD_HASH) {
-                isAdminMode = true;
-                document.getElementById('adminToggle').classList.add('active');
-                document.getElementById('adminToggle').textContent = 'ADMIN MODE';
+            if (!email || !password) {
+                errorDiv.textContent = 'Please enter both email and password';
+                errorDiv.style.display = 'block';
+                return;
+            }
 
-                // Add admin badge to header
-                const header = document.querySelector('.header h1');
-                if (!document.querySelector('.admin-badge')) {
-                    header.innerHTML += '<span class="admin-badge">ADMIN ACTIVE</span>';
+            try {
+                errorDiv.style.display = 'none';
+                await auth.signInWithEmailAndPassword(email, password);
+                closePasswordModal();
+                console.log('[Admin] Sign-in successful');
+            } catch (error) {
+                console.error('[Admin] Sign-in error:', error);
+                let errorMessage = 'Authentication failed';
+
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address';
+                        break;
+                    case 'auth/user-not-found':
+                        errorMessage = 'No admin account found';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'Incorrect password';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many attempts. Try again later';
+                        break;
+                    default:
+                        errorMessage = error.message;
                 }
 
-                closePasswordModal();
-                loadRequests(); // Reload to show admin controls
-
-                console.log('[Admin] Admin mode enabled');
-            } else {
-                alert('INCORRECT PASSWORD');
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
                 document.getElementById('adminPassword').value = '';
-                document.getElementById('adminPassword').focus();
+            }
+        }
+
+        // Sign out
+        async function signOutAdmin() {
+            try {
+                await auth.signOut();
+                console.log('[Admin] Signed out successfully');
+            } catch (error) {
+                console.error('[Admin] Sign-out error:', error);
+                alert('ERROR: Failed to sign out');
             }
         }
 
         // Close password modal
         function closePasswordModal() {
             document.getElementById('passwordModal').classList.remove('active');
+            document.getElementById('adminEmail').value = '';
             document.getElementById('adminPassword').value = '';
+            document.getElementById('authError').style.display = 'none';
         }
 
         // Change request status
