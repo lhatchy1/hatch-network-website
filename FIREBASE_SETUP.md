@@ -105,6 +105,7 @@ To secure your database and allow users to edit their own requests, update your 
 **Regular Users (Anonymous):**
 - Automatically signed in when they visit the site
 - Can submit requests
+- Can edit their own requests (title, year, notes)
 - Can delete their own requests only
 - Cannot change status of requests
 - User ID persists in browser (until they clear data)
@@ -112,7 +113,7 @@ To secure your database and allow users to edit their own requests, update your 
 **Admin Users (Email/Password):**
 - Sign in via ADMIN MODE button
 - Can modify/delete ANY request
-- Can change status (Pending → In Progress → Completed)
+- Can change status (Pending → Searching → Downloading → Completed)
 - Full administrative control
 
 4. Click **Publish** to apply the rules
