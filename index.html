@@ -594,8 +594,11 @@
         // FormSubmit Email Endpoint (replace with your email)
         const FORMSUBMIT_EMAIL = "plex@hatchnetwork.ch";
 
-        // Admin Configuration
-        const ADMIN_PASSWORD = "hatch2024"; // Change this to your desired password
+        // Admin Configuration - Password Hash (SHA-256)
+        // Current password: "hatch2024"
+        // To generate a new hash, open browser console and run:
+        // await crypto.subtle.digest('SHA-256', new TextEncoder().encode('your-password')).then(h => console.log(Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join('')))
+        const ADMIN_PASSWORD_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
 
         // ========================================
         // INITIALIZATION
@@ -851,11 +854,21 @@ This request has been added to your Firebase database and is visible to all user
             }
         });
 
-        // Check admin password
-        function checkAdminPassword() {
-            const password = document.getElementById('adminPassword').value;
+        // Hash password using SHA-256
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
 
-            if (password === ADMIN_PASSWORD) {
+        // Check admin password
+        async function checkAdminPassword() {
+            const password = document.getElementById('adminPassword').value;
+            const passwordHash = await hashPassword(password);
+
+            if (passwordHash === ADMIN_PASSWORD_HASH) {
                 isAdminMode = true;
                 document.getElementById('adminToggle').classList.add('active');
                 document.getElementById('adminToggle').textContent = 'ADMIN MODE';
