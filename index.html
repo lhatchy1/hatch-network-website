@@ -330,6 +330,24 @@
             border-color: #aa44ff;
         }
 
+        .status-backlog {
+            color: #888888;
+            border-color: #888888;
+        }
+
+        .admin-note {
+            color: #ff4444;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            padding: 8px;
+            border-left: 2px solid #ff4444;
+            background-color: rgba(255, 68, 68, 0.05);
+        }
+
+        .admin-note strong {
+            color: #ff6666;
+        }
+
         .no-requests {
             color: var(--text-muted);
             font-style: italic;
@@ -477,6 +495,16 @@
             color: #aa44ff;
         }
 
+        .admin-btn.status-backlog {
+            border-color: #888888;
+            color: #888888;
+        }
+
+        .admin-btn.add-note {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
         .admin-btn.delete {
             border-color: var(--error);
             color: var(--error);
@@ -616,8 +644,11 @@
                 SUBMIT NEW REQUEST <span id="formToggleIcon">[+]</span>
             </h2>
             <div id="formContent" style="display: none;">
-                <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 15px; font-style: italic;">
+                <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 8px; font-style: italic;">
                     🙁 Regrettably, anime requests are not welcome.
+                </p>
+                <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 15px; font-style: italic;">
+                    💡 Please check if your request is already available on Plex before submitting.
                 </p>
                 <form id="requestForm">
                 <div class="form-group">
@@ -662,6 +693,21 @@
             </p>
             <div id="requestContainer">
                 <div class="loading"></div>
+            </div>
+        </section>
+
+        <!-- Backlog Queue -->
+        <section class="request-list" style="margin-top: 20px;">
+            <h2 id="backlogToggle" style="cursor: pointer; user-select: none; transition: color 0.2s;">
+                BACKLOG QUEUE <span id="backlogToggleIcon">[+]</span>
+            </h2>
+            <div id="backlogContent" style="display: none;">
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px; font-style: italic;">
+                    Requests that are on hold or difficult to find.
+                </p>
+                <div id="backlogContainer">
+                    <div class="no-requests">NO BACKLOG ITEMS</div>
+                </div>
             </div>
         </section>
     </main>
@@ -716,6 +762,22 @@
             <div class="modal-buttons">
                 <button class="btn" onclick="saveEditRequest()">SAVE</button>
                 <button class="btn" onclick="closeEditModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Note Modal -->
+    <div class="modal" id="adminNoteModal">
+        <div class="modal-content">
+            <h2>ADD ADMIN NOTE</h2>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">Add a note visible to all users:</p>
+            <input type="hidden" id="adminNoteRequestId">
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">ADMIN NOTE</label>
+            <textarea id="adminNoteText" placeholder="Enter your note here..." style="min-height: 100px;"></textarea>
+            <div id="adminNoteError" style="color: var(--error); font-size: 0.85rem; margin-bottom: 15px; display: none;"></div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="saveAdminNote()">SAVE</button>
+                <button class="btn" onclick="closeAdminNoteModal()">CANCEL</button>
             </div>
         </div>
     </div>
@@ -826,13 +888,16 @@
 
         function loadRequests() {
             requestsRef.on('value', (snapshot) => {
-                const container = document.getElementById('requestContainer');
-                container.innerHTML = '';
+                const mainContainer = document.getElementById('requestContainer');
+                const backlogContainer = document.getElementById('backlogContainer');
+                mainContainer.innerHTML = '';
+                backlogContainer.innerHTML = '';
 
                 const requests = snapshot.val();
 
                 if (!requests) {
-                    container.innerHTML = '<div class="no-requests">NO REQUESTS YET. BE THE FIRST TO SUBMIT!</div>';
+                    mainContainer.innerHTML = '<div class="no-requests">NO REQUESTS YET. BE THE FIRST TO SUBMIT!</div>';
+                    backlogContainer.innerHTML = '<div class="no-requests">NO BACKLOG ITEMS</div>';
                     return;
                 }
 
@@ -842,49 +907,74 @@
                     ...data
                 })).sort((a, b) => b.timestamp - a.timestamp);
 
-                requestArray.forEach(request => {
-                    const requestDiv = document.createElement('div');
-                    requestDiv.className = 'request-item';
+                // Separate main queue and backlog items
+                const mainQueue = requestArray.filter(r => r.status !== 'Backlog');
+                const backlogQueue = requestArray.filter(r => r.status === 'Backlog');
 
-                    const statusClass = `status-${request.status.toLowerCase().replace(' ', '-')}`;
-                    const date = new Date(request.timestamp).toLocaleDateString();
-                    const completedDate = request.completedAt ? new Date(request.completedAt).toLocaleDateString() : 'N/A';
+                // Render main queue
+                if (mainQueue.length === 0) {
+                    mainContainer.innerHTML = '<div class="no-requests">NO ACTIVE REQUESTS</div>';
+                } else {
+                    mainQueue.forEach(request => {
+                        mainContainer.appendChild(createRequestElement(request));
+                    });
+                }
 
-                    // Check if current user can edit this request
-                    const isOwner = request.userId === currentUserId;
-                    const canEdit = isAdminMode || isOwner;
-
-                    requestDiv.innerHTML = `
-                        <div class="request-title">${request.title} ${request.year ? `(${request.year})` : ''}</div>
-                        <div class="request-meta">
-                            TYPE: ${request.type} | REQUESTED BY: ${request.requesterName} | DATE: ${date}
-                            ${request.completedAt ? ` | COMPLETED: ${completedDate}` : ''}
-                        </div>
-                        ${request.notes ? `<div class="request-meta">NOTES: ${request.notes}</div>` : ''}
-                        <span class="request-status ${statusClass}">[${request.status.toUpperCase()}]</span>
-                        ${canEdit ? `
-                        <div class="admin-controls active" id="controls-${request.id}">
-                            ${isAdminMode ? `
-                            <button class="admin-btn status-new" onclick="changeStatus('${request.id}', 'New')">→ NEW</button>
-                            <button class="admin-btn status-searching" onclick="changeStatus('${request.id}', 'Searching')">→ SEARCHING</button>
-                            <button class="admin-btn status-downloading" onclick="changeStatus('${request.id}', 'Downloading')">→ DOWNLOADING</button>
-                            <button class="admin-btn status-completed" onclick="changeStatus('${request.id}', 'Completed')">→ COMPLETED</button>
-                            ` : ''}
-                            ${isOwner && !isAdminMode ? `
-                            <button class="admin-btn" onclick="openEditModal('${request.id}')">✎ EDIT</button>
-                            ` : ''}
-                            <button class="admin-btn delete" onclick="deleteRequest('${request.id}', '${request.title}')">✕ DELETE</button>
-                        </div>
-                        ` : ''}
-                    `;
-
-                    container.appendChild(requestDiv);
-                });
+                // Render backlog queue
+                if (backlogQueue.length === 0) {
+                    backlogContainer.innerHTML = '<div class="no-requests">NO BACKLOG ITEMS</div>';
+                } else {
+                    backlogQueue.forEach(request => {
+                        backlogContainer.appendChild(createRequestElement(request));
+                    });
+                }
             }, (error) => {
                 console.error('Error loading requests:', error);
                 document.getElementById('requestContainer').innerHTML =
                     '<div class="no-requests">ERROR LOADING REQUESTS. CHECK FIREBASE CONFIGURATION.</div>';
             });
+        }
+
+        function createRequestElement(request) {
+            const requestDiv = document.createElement('div');
+            requestDiv.className = 'request-item';
+
+            const statusClass = `status-${request.status.toLowerCase().replace(' ', '-')}`;
+            const date = new Date(request.timestamp).toLocaleDateString();
+            const completedDate = request.completedAt ? new Date(request.completedAt).toLocaleDateString() : 'N/A';
+
+            // Check if current user can edit this request
+            const isOwner = request.userId === currentUserId;
+            const canEdit = isAdminMode || isOwner;
+
+            requestDiv.innerHTML = `
+                <div class="request-title">${request.title} ${request.year ? `(${request.year})` : ''}</div>
+                <div class="request-meta">
+                    TYPE: ${request.type} | REQUESTED BY: ${request.requesterName} | DATE: ${date}
+                    ${request.completedAt ? ` | COMPLETED: ${completedDate}` : ''}
+                </div>
+                ${request.notes ? `<div class="request-meta">NOTES: ${request.notes}</div>` : ''}
+                ${request.adminNote ? `<div class="admin-note"><strong>Admin note:</strong> ${request.adminNote}</div>` : ''}
+                <span class="request-status ${statusClass}">[${request.status.toUpperCase()}]</span>
+                ${canEdit ? `
+                <div class="admin-controls active" id="controls-${request.id}">
+                    ${isAdminMode ? `
+                    <button class="admin-btn status-new" onclick="changeStatus('${request.id}', 'New')">→ NEW</button>
+                    <button class="admin-btn status-searching" onclick="changeStatus('${request.id}', 'Searching')">→ SEARCHING</button>
+                    <button class="admin-btn status-downloading" onclick="changeStatus('${request.id}', 'Downloading')">→ DOWNLOADING</button>
+                    <button class="admin-btn status-completed" onclick="changeStatus('${request.id}', 'Completed')">→ COMPLETED</button>
+                    <button class="admin-btn status-backlog" onclick="changeStatus('${request.id}', 'Backlog')">→ BACKLOG</button>
+                    <button class="admin-btn add-note" onclick="openAdminNoteModal('${request.id}')">📝 NOTE</button>
+                    ` : ''}
+                    ${isOwner && !isAdminMode ? `
+                    <button class="admin-btn" onclick="openEditModal('${request.id}')">✎ EDIT</button>
+                    ` : ''}
+                    <button class="admin-btn delete" onclick="deleteRequest('${request.id}', '${request.title}')">✕ DELETE</button>
+                </div>
+                ` : ''}
+            `;
+
+            return requestDiv;
         }
 
         // ========================================
@@ -1294,6 +1384,71 @@ This request has been added to your Firebase database and is visible to all user
             }
         }
 
+        // Open admin note modal
+        async function openAdminNoteModal(requestId) {
+            if (!isAdminMode) {
+                alert('ADMIN MODE REQUIRED');
+                return;
+            }
+
+            try {
+                const snapshot = await requestsRef.child(requestId).once('value');
+                const request = snapshot.val();
+
+                if (!request) {
+                    alert('ERROR: Request not found');
+                    return;
+                }
+
+                // Populate form with current admin note if exists
+                document.getElementById('adminNoteRequestId').value = requestId;
+                document.getElementById('adminNoteText').value = request.adminNote || '';
+                document.getElementById('adminNoteError').style.display = 'none';
+
+                // Show modal
+                document.getElementById('adminNoteModal').classList.add('active');
+                document.getElementById('adminNoteText').focus();
+            } catch (error) {
+                console.error('[Admin] Error opening admin note modal:', error);
+                alert(`ERROR: ${error.message}`);
+            }
+        }
+
+        // Close admin note modal
+        function closeAdminNoteModal() {
+            document.getElementById('adminNoteModal').classList.remove('active');
+            document.getElementById('adminNoteRequestId').value = '';
+            document.getElementById('adminNoteText').value = '';
+            document.getElementById('adminNoteError').style.display = 'none';
+        }
+
+        // Save admin note
+        async function saveAdminNote() {
+            if (!isAdminMode) {
+                alert('ADMIN MODE REQUIRED');
+                return;
+            }
+
+            const requestId = document.getElementById('adminNoteRequestId').value;
+            const noteText = document.getElementById('adminNoteText').value.trim();
+            const errorDiv = document.getElementById('adminNoteError');
+
+            try {
+                const updates = {
+                    adminNote: noteText || null  // Set to null if empty to remove the note
+                };
+
+                await requestsRef.child(requestId).update(updates);
+                console.log(`[Admin] ${noteText ? 'Added' : 'Removed'} admin note`);
+                closeAdminNoteModal();
+
+            } catch (error) {
+                console.error('[Admin] Error saving admin note:', error);
+                errorDiv.textContent = `ERROR: ${error.message}`;
+                errorDiv.style.display = 'block';
+            }
+        }
+
         // Migrate old status values to new ones
         async function migrateStatusValues() {
             try {
@@ -1449,6 +1604,28 @@ This request has been added to your Firebase database and is visible to all user
                 formContent.style.display = 'none';
                 toggleIcon.textContent = '[+]';
             }
+        });
+
+        // Backlog toggle
+        document.getElementById('backlogToggle').addEventListener('click', function() {
+            const backlogContent = document.getElementById('backlogContent');
+            const toggleIcon = document.getElementById('backlogToggleIcon');
+
+            if (backlogContent.style.display === 'none') {
+                backlogContent.style.display = 'block';
+                toggleIcon.textContent = '[-]';
+            } else {
+                backlogContent.style.display = 'none';
+                toggleIcon.textContent = '[+]';
+            }
+        });
+
+        // Add hover effect to backlog toggle
+        document.getElementById('backlogToggle').addEventListener('mouseenter', function() {
+            this.style.color = 'var(--text-secondary)';
+        });
+        document.getElementById('backlogToggle').addEventListener('mouseleave', function() {
+            this.style.color = '';
         });
 
         // ========================================
