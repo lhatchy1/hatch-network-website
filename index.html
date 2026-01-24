@@ -175,10 +175,30 @@
         .request-form h2 {
             margin-bottom: 20px;
             font-size: 1.3rem;
+            transition: color 0.2s;
+        }
+
+        .request-form h2:hover {
+            color: var(--text-secondary);
         }
 
         .request-form h2::before {
             content: '>> ';
+        }
+
+        #formContent {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .form-group {
@@ -592,11 +612,14 @@
 
         <!-- Request Form -->
         <section class="request-form">
-            <h2>SUBMIT NEW REQUEST</h2>
-            <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 15px; font-style: italic;">
-                🙁 Regrettably, anime requests are not welcome.
-            </p>
-            <form id="requestForm">
+            <h2 id="formToggle" style="cursor: pointer; user-select: none;">
+                SUBMIT NEW REQUEST <span id="formToggleIcon">[+]</span>
+            </h2>
+            <div id="formContent" style="display: none;">
+                <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 15px; font-style: italic;">
+                    🙁 Regrettably, anime requests are not welcome.
+                </p>
+                <form id="requestForm">
                 <div class="form-group">
                     <label for="requesterName">YOUR NAME</label>
                     <input type="text" id="requesterName" name="name" required>
@@ -628,6 +651,7 @@
 
                 <button type="submit" class="btn">SUBMIT REQUEST</button>
             </form>
+            </div>
         </section>
 
         <!-- Request List -->
@@ -1409,6 +1433,23 @@ This request has been added to your Firebase database and is visible to all user
 
         // Update weather every 10 minutes
         setInterval(fetchWeather, 10 * 60 * 1000);
+
+        // ========================================
+        // COLLAPSIBLE FORM TOGGLE
+        // ========================================
+
+        document.getElementById('formToggle').addEventListener('click', function() {
+            const formContent = document.getElementById('formContent');
+            const toggleIcon = document.getElementById('formToggleIcon');
+
+            if (formContent.style.display === 'none') {
+                formContent.style.display = 'block';
+                toggleIcon.textContent = '[-]';
+            } else {
+                formContent.style.display = 'none';
+                toggleIcon.textContent = '[+]';
+            }
+        });
 
         // ========================================
         // INITIALIZE ON PAGE LOAD
