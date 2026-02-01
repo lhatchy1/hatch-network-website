@@ -1078,6 +1078,51 @@
                         Be respectful and keep it fun!
                     </p>
                 </div>
+
+                <!-- World Map -->
+                <div style="background-color: var(--bg-secondary); border: 2px solid var(--border-color); padding: 15px; margin-bottom: 20px;">
+                    <h3 style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">
+                        <span style="color: var(--text-secondary);">> </span>GLOBAL ACTIVITY (LAST 7 DAYS)
+                    </h3>
+                    <div id="worldMap" style="position: relative; width: 100%; height: 300px; background-color: var(--bg-primary); border: 1px solid var(--border-color);">
+                        <svg viewBox="0 0 1000 500" style="width: 100%; height: 100%;" id="mapSvg">
+                            <!-- Simple world map outline -->
+                            <path d="M 50 250 Q 100 200 150 220 L 200 200 L 250 240 L 280 220 L 300 250 L 320 240 L 350 260 L 380 250 L 400 270 L 450 260 L 500 280 L 550 270 L 600 250 L 650 260 L 700 240 L 750 250 L 800 230 L 850 240 L 900 250 L 920 260 M 100 300 L 150 320 L 200 310 L 250 330 L 300 320 L 350 340 L 400 330 M 500 350 Q 550 370 600 360 L 650 380 L 700 370"
+                                  fill="none"
+                                  stroke="var(--border-color)"
+                                  stroke-width="1"
+                                  opacity="0.5"/>
+
+                            <!-- Continents outline (simplified) -->
+                            <!-- North America -->
+                            <path d="M 120,180 L 140,150 L 160,140 L 180,150 L 200,160 L 220,180 L 240,200 L 250,220 L 240,240 L 220,250 L 200,240 L 180,230 L 160,220 L 140,200 Z"
+                                  fill="none" stroke="var(--border-color)" stroke-width="1.5"/>
+
+                            <!-- South America -->
+                            <path d="M 240,280 L 250,260 L 260,270 L 270,290 L 280,310 L 275,330 L 265,340 L 255,330 L 245,310 Z"
+                                  fill="none" stroke="var(--border-color)" stroke-width="1.5"/>
+
+                            <!-- Europe -->
+                            <path d="M 480,160 L 500,150 L 520,155 L 540,165 L 550,180 L 545,200 L 530,210 L 510,205 L 490,195 L 475,180 Z"
+                                  fill="none" stroke="var(--border-color)" stroke-width="1.5"/>
+
+                            <!-- Africa -->
+                            <path d="M 500,220 L 520,230 L 540,250 L 550,280 L 555,310 L 550,340 L 540,360 L 520,370 L 500,365 L 485,350 L 480,320 L 485,290 L 490,260 Z"
+                                  fill="none" stroke="var(--border-color)" stroke-width="1.5"/>
+
+                            <!-- Asia -->
+                            <path d="M 560,140 L 600,130 L 650,135 L 700,145 L 750,155 L 800,165 L 840,175 L 860,190 L 870,210 L 860,230 L 840,245 L 800,255 L 750,260 L 700,255 L 650,245 L 620,230 L 600,210 L 580,190 L 565,170 Z"
+                                  fill="none" stroke="var(--border-color)" stroke-width="1.5"/>
+
+                            <!-- Australia -->
+                            <path d="M 780,340 L 810,335 L 840,340 L 860,355 L 865,375 L 855,390 L 835,395 L 810,390 L 790,380 L 775,365 Z"
+                                  fill="none" stroke="var(--border-color)" stroke-width="1.5"/>
+
+                            <!-- Activity dots will be added here dynamically -->
+                            <g id="activityDots"></g>
+                        </svg>
+                    </div>
+                </div>
             </div>
 
             <!-- Chat Messages Container -->
@@ -2157,6 +2202,68 @@ This request has been added to your Firebase database and is visible to all user
         const chatRef = database.ref('chat/messages');
         let chatLoaded = false;
 
+        // Convert lat/lng to SVG coordinates
+        function latLngToSvg(lat, lng) {
+            // Map projection (simple equirectangular)
+            // Longitude -180 to 180 maps to X 0 to 1000
+            // Latitude 90 to -90 maps to Y 0 to 500
+            const x = ((lng + 180) / 360) * 1000;
+            const y = ((90 - lat) / 180) * 500;
+            return { x, y };
+        }
+
+        // Update world map with activity dots
+        function updateWorldMap(messages) {
+            const dotsContainer = document.getElementById('activityDots');
+            if (!dotsContainer) return;
+
+            // Clear existing dots
+            dotsContainer.innerHTML = '';
+
+            // Filter messages from last 7 days with location data
+            const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+            const recentMessages = messages.filter(m =>
+                m.timestamp > sevenDaysAgo &&
+                m.lat &&
+                m.lng
+            );
+
+            // Plot dots on map
+            recentMessages.forEach((msg, index) => {
+                const coords = latLngToSvg(msg.lat, msg.lng);
+
+                // Create dot
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', coords.x);
+                circle.setAttribute('cy', coords.y);
+                circle.setAttribute('r', '4');
+                circle.setAttribute('fill', '#ff4444');
+                circle.setAttribute('opacity', '0.8');
+                circle.setAttribute('class', 'activity-dot');
+
+                // Add pulsing animation
+                const animate = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+                animate.setAttribute('attributeName', 'r');
+                animate.setAttribute('values', '4;6;4');
+                animate.setAttribute('dur', '2s');
+                animate.setAttribute('repeatCount', 'indefinite');
+                animate.setAttribute('begin', `${index * 0.1}s`);
+                circle.appendChild(animate);
+
+                // Add tooltip title
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                title.textContent = `${msg.city}, ${msg.country} - ${new Date(msg.timestamp).toLocaleDateString()}`;
+                circle.appendChild(title);
+
+                // Add glow effect
+                circle.style.filter = 'drop-shadow(0 0 3px #ff4444)';
+
+                dotsContainer.appendChild(circle);
+            });
+
+            console.log(`[Map] Plotted ${recentMessages.length} activity dots`);
+        }
+
         // Load and display chat messages
         function loadChat() {
             if (chatLoaded) return; // Already listening
@@ -2185,6 +2292,9 @@ This request has been added to your Firebase database and is visible to all user
                 if (hasNewMessages && !document.getElementById('chat-tab').classList.contains('active')) {
                     showNotification('chat');
                 }
+
+                // Update world map with message locations
+                updateWorldMap(messages);
 
                 if (messages.length === 0) {
                     container.innerHTML = '<div class="no-requests">NO MESSAGES YET. BE THE FIRST TO SAY HELLO!</div>';
@@ -2227,6 +2337,47 @@ This request has been added to your Firebase database and is visible to all user
             });
         }
 
+        // Get user location from IP address
+        async function getUserLocation() {
+            try {
+                // Try to get cached location first (to avoid excessive API calls)
+                const cachedLocation = localStorage.getItem('userLocation');
+                const cacheTime = localStorage.getItem('userLocationTime');
+
+                // Use cached location if less than 24 hours old
+                if (cachedLocation && cacheTime) {
+                    const age = Date.now() - parseInt(cacheTime);
+                    if (age < 24 * 60 * 60 * 1000) {
+                        return JSON.parse(cachedLocation);
+                    }
+                }
+
+                // Fetch new location from IP geolocation service
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+
+                if (data.latitude && data.longitude) {
+                    const location = {
+                        lat: data.latitude,
+                        lng: data.longitude,
+                        city: data.city || 'Unknown',
+                        country: data.country_name || 'Unknown'
+                    };
+
+                    // Cache the location
+                    localStorage.setItem('userLocation', JSON.stringify(location));
+                    localStorage.setItem('userLocationTime', Date.now().toString());
+
+                    return location;
+                }
+
+                return null;
+            } catch (error) {
+                console.error('[Geolocation] Error fetching location:', error);
+                return null;
+            }
+        }
+
         // Send a chat message
         async function sendChatMessage() {
             const usernameInput = document.getElementById('chatUsername');
@@ -2254,12 +2405,23 @@ This request has been added to your Firebase database and is visible to all user
             }
 
             try {
+                // Get user location
+                const location = await getUserLocation();
+
                 const newMessage = {
                     username: username,
                     message: message,
                     timestamp: Date.now(),
                     userId: currentUserId // Add ownership tracking
                 };
+
+                // Add location if available
+                if (location) {
+                    newMessage.lat = location.lat;
+                    newMessage.lng = location.lng;
+                    newMessage.city = location.city;
+                    newMessage.country = location.country;
+                }
 
                 await chatRef.push(newMessage);
 

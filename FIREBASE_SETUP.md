@@ -109,7 +109,11 @@ To secure your database and allow users to edit their own requests, update your 
                         newData.child('message').val().length <= 500 &&
                         newData.child('userId').isString() &&
                         newData.child('timestamp').isNumber() &&
-                        (!newData.hasChild('editedAt') || newData.child('editedAt').isNumber())"
+                        (!newData.hasChild('editedAt') || newData.child('editedAt').isNumber()) &&
+                        (!newData.hasChild('lat') || newData.child('lat').isNumber()) &&
+                        (!newData.hasChild('lng') || newData.child('lng').isNumber()) &&
+                        (!newData.hasChild('city') || newData.child('city').isString()) &&
+                        (!newData.hasChild('country') || newData.child('country').isString())"
         }
       }
     }
@@ -137,6 +141,7 @@ To secure your database and allow users to edit their own requests, update your 
 - ✅ **Admin users (with email) can modify/delete ANY** message
 - ✅ **Data validation** ensures messages have username, message text, timestamp, and userId
 - ✅ **Edited messages** get an editedAt timestamp when modified
+- ✅ **Geolocation data** (lat, lng, city, country) is optional and used for world map visualization
 
 ### How it works:
 
