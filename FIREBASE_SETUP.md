@@ -86,6 +86,25 @@ To secure your database and allow users to edit their own requests, update your 
           auth.token.email != null
         )"
       }
+    },
+    "plexStats": {
+      ".read": true,
+      ".write": false
+    },
+    "chat": {
+      "messages": {
+        ".read": true,
+        ".write": "auth != null",
+        "$messageId": {
+          ".validate": "newData.hasChildren(['username', 'message', 'timestamp']) &&
+                        newData.child('username').isString() &&
+                        newData.child('username').val().length > 0 &&
+                        newData.child('username').val().length <= 20 &&
+                        newData.child('message').isString() &&
+                        newData.child('message').val().length > 0 &&
+                        newData.child('message').val().length <= 500"
+        }
+      }
     }
   }
 }
