@@ -149,6 +149,45 @@
             }
         }
 
+        /* Plex Stats Widget */
+        .plex-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            background-color: rgba(0, 255, 65, 0.05);
+            font-size: 0.85rem;
+        }
+
+        .plex-stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .plex-stat-item .icon {
+            font-size: 1.2rem;
+        }
+
+        .plex-stat-item .count {
+            color: var(--text-primary);
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .plex-stat-item .label {
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .plex-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
         .header h1 {
             font-size: 1.8rem;
         }
@@ -633,6 +672,20 @@
                 </span>
             </h1>
             <p>Submit your TV show and movie requests below. All submissions are tracked in the queue below.</p>
+
+            <!-- Plex Library Stats -->
+            <div class="plex-stats" id="plexStats">
+                <div class="plex-stat-item">
+                    <span class="icon">🎬</span>
+                    <span class="count" id="movieCount">--</span>
+                    <span class="label">Movies</span>
+                </div>
+                <div class="plex-stat-item">
+                    <span class="icon">📺</span>
+                    <span class="count" id="tvCount">--</span>
+                    <span class="label">TV Shows</span>
+                </div>
+            </div>
         </div>
 
         <div class="error-message" id="errorMessage"></div>
@@ -1588,6 +1641,36 @@ This request has been added to your Firebase database and is visible to all user
 
         // Update weather every 10 minutes
         setInterval(fetchWeather, 10 * 60 * 1000);
+
+        // ========================================
+        // PLEX LIBRARY STATS
+        // ========================================
+
+        // Load Plex library stats from Firebase
+        function loadPlexStats() {
+            const plexStatsRef = database.ref('plexStats');
+
+            plexStatsRef.on('value', (snapshot) => {
+                const stats = snapshot.val();
+
+                if (stats) {
+                    document.getElementById('movieCount').textContent = stats.movies || '--';
+                    document.getElementById('tvCount').textContent = stats.tvShows || '--';
+                    console.log('[Plex] Stats loaded:', stats);
+                } else {
+                    console.log('[Plex] No stats available yet');
+                    document.getElementById('movieCount').textContent = '--';
+                    document.getElementById('tvCount').textContent = '--';
+                }
+            }, (error) => {
+                console.error('[Plex] Error loading stats:', error);
+                document.getElementById('movieCount').textContent = '--';
+                document.getElementById('tvCount').textContent = '--';
+            });
+        }
+
+        // Load stats on page load
+        loadPlexStats();
 
         // ========================================
         // COLLAPSIBLE FORM TOGGLE
