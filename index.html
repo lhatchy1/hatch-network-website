@@ -344,8 +344,8 @@
         .chat-message {
             background-color: var(--bg-tertiary);
             border-left: 3px solid var(--border-color);
-            padding: 12px;
-            margin-bottom: 12px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
             transition: all 0.2s;
         }
 
@@ -353,11 +353,18 @@
             border-left-color: var(--text-primary);
         }
 
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 3px;
+            gap: 10px;
+        }
+
         .chat-username {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-secondary);
             font-weight: bold;
-            margin-bottom: 5px;
         }
 
         .chat-username::before {
@@ -368,40 +375,41 @@
             content: ' ]';
         }
 
-        .chat-text {
-            font-size: 0.9rem;
-            color: var(--text-primary);
-            line-height: 1.5;
-            word-wrap: break-word;
-            margin-bottom: 5px;
-        }
-
         .chat-timestamp {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-muted);
+            white-space: nowrap;
         }
 
         .chat-edited-badge {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-muted);
             font-style: italic;
-            margin-left: 5px;
+            margin-left: 3px;
+        }
+
+        .chat-text {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            line-height: 1.4;
+            word-wrap: break-word;
+            margin-bottom: 4px;
         }
 
         .chat-controls {
             display: flex;
-            gap: 8px;
-            margin-top: 8px;
+            gap: 6px;
+            margin-top: 4px;
         }
 
         .chat-btn {
             background-color: transparent;
             border: 1px solid var(--border-color);
             color: var(--text-muted);
-            padding: 3px 10px;
+            padding: 2px 8px;
             cursor: pointer;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             transition: all 0.2s;
         }
 
@@ -2114,9 +2122,11 @@ This request has been added to your Firebase database and is visible to all user
                         const editedBadge = msg.editedAt ? '<span class="chat-edited-badge">(edited)</span>' : '';
 
                         messageDiv.innerHTML = `
-                            <div class="chat-username">${escapeHtml(msg.username)}</div>
+                            <div class="chat-header">
+                                <div class="chat-username">${escapeHtml(msg.username)}</div>
+                                <div class="chat-timestamp">${timeStr}${editedBadge}</div>
+                            </div>
                             <div class="chat-text">${escapeHtml(msg.message)}</div>
-                            <div class="chat-timestamp">${timeStr} ${editedBadge}</div>
                             ${isOwner ? `
                             <div class="chat-controls">
                                 <button class="chat-btn" onclick="editChatMessage('${msg.id}')">✎ Edit</button>
