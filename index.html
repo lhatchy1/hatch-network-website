@@ -340,6 +340,87 @@
             color: var(--text-muted);
         }
 
+        /* Chat Messages */
+        .chat-message {
+            background-color: var(--bg-tertiary);
+            border-left: 3px solid var(--border-color);
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .chat-message:hover {
+            border-left-color: var(--text-primary);
+        }
+
+        .chat-username {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .chat-username::before {
+            content: '[ ';
+        }
+
+        .chat-username::after {
+            content: ' ]';
+        }
+
+        .chat-text {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            line-height: 1.5;
+            word-wrap: break-word;
+            margin-bottom: 5px;
+        }
+
+        .chat-timestamp {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .chat-edited-badge {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-left: 5px;
+        }
+
+        .chat-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .chat-btn {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 3px 10px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+        }
+
+        .chat-btn:hover {
+            background-color: rgba(0, 255, 65, 0.1);
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+        }
+
+        .chat-btn.delete:hover {
+            background-color: rgba(255, 68, 68, 0.1);
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        #chatMessages {
+            scroll-behavior: smooth;
+        }
+
         /* Request Form */
         .request-form {
             background-color: var(--bg-secondary);
@@ -815,6 +896,7 @@
         <nav class="tab-navigation">
             <button class="tab-btn active" onclick="switchTab('plex')">PLEX</button>
             <button class="tab-btn" onclick="switchTab('news')">NEWS</button>
+            <button class="tab-btn" onclick="switchTab('chat')">HATCHCHAT</button>
         </nav>
 
         <div class="error-message" id="errorMessage"></div>
@@ -822,6 +904,12 @@
 
         <!-- Plex Tab Content -->
         <div id="plex-tab" class="tab-content active">
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 15px;">
+                    <span style="color: var(--text-secondary);"># </span>PLEX REQUESTS
+                </h2>
+            </div>
+
             <!-- Plex Library Stats -->
             <div class="plex-stats" id="plexStats" style="margin-bottom: 30px;">
                 <div class="plex-stat-item">
@@ -878,7 +966,7 @@
                     <textarea id="additionalNotes" name="notes" placeholder="Season number, specific details, etc."></textarea>
                 </div>
 
-                <button type="submit" class="btn">SUBMIT REQUEST</button>
+                <button type="submit" class="btn">REQUEST NEW PLEX CONTENT</button>
             </form>
             </div>
         </section>
@@ -918,9 +1006,6 @@
                 <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 15px;">
                     <span style="color: var(--text-secondary);"># </span>WORLD NEWS FEED
                 </h2>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
-                    Aggregated news from BBC, Reuters, NPR, and other trusted sources
-                </p>
             </div>
 
             <!-- News Sources Filter -->
@@ -940,6 +1025,51 @@
         </div>
         <!-- End News Tab Content -->
 
+        <!-- HatchChat Tab Content -->
+        <div id="chat-tab" class="tab-content">
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 15px;">
+                    <span style="color: var(--text-secondary);"># </span>HATCHCHAT
+                </h2>
+                <div style="padding: 15px; border: 2px solid #ff4444; background-color: rgba(255, 68, 68, 0.05); margin-bottom: 20px;">
+                    <p style="color: #ff6666; font-size: 0.85rem; line-height: 1.6;">
+                        ⚠️ <strong>PUBLIC CHAT ROOM:</strong> Messages are visible to anyone on the internet.
+                        Do not share personal information, passwords, or post illegal/illicit content.
+                        Be respectful and keep it fun!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Chat Messages Container -->
+            <div id="chatMessages" style="background-color: var(--bg-secondary); border: 2px solid var(--border-color); padding: 20px; min-height: 400px; max-height: 500px; overflow-y: auto; margin-bottom: 20px;">
+                <div class="loading"></div>
+            </div>
+
+            <!-- Chat Input Form -->
+            <div style="background-color: var(--bg-secondary); border: 2px solid var(--border-color); padding: 20px;">
+                <div style="display: grid; gap: 15px;">
+                    <div>
+                        <label style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 0.9rem;">
+                            <span style="color: var(--text-secondary);">> </span>USERNAME
+                        </label>
+                        <input type="text" id="chatUsername" placeholder="Enter your username..."
+                               style="width: 100%; padding: 10px; background-color: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', Courier, monospace;"
+                               maxlength="20">
+                    </div>
+                    <div>
+                        <label style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 0.9rem;">
+                            <span style="color: var(--text-secondary);">> </span>MESSAGE
+                        </label>
+                        <textarea id="chatMessage" placeholder="Type your message..."
+                                  style="width: 100%; padding: 10px; background-color: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', Courier, monospace; resize: vertical; min-height: 80px;"
+                                  maxlength="500"></textarea>
+                    </div>
+                    <button onclick="sendChatMessage()" class="btn">SEND MESSAGE</button>
+                </div>
+            </div>
+        </div>
+        <!-- End HatchChat Tab Content -->
+
     </main>
 
     <!-- Bottom Navigation -->
@@ -949,7 +1079,7 @@
             <li><a href="ts3server://ts.hatchnetwork.ch?port=9987">ts.hatchnetwork.ch</a></li>
         </ul>
         <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 20px; font-style: italic; opacity: 0.7;">
-            ⚠ Note: Your ability to edit your requests is tied to this browser. Clearing browser data will prevent you from managing your own requests.
+            ⚠ Note: Your ability to edit your requests and messages is tied to this browser. Clearing browser data will prevent you from managing your own content.
         </p>
     </footer>
 
@@ -1008,6 +1138,22 @@
             <div class="modal-buttons">
                 <button class="btn" onclick="saveAdminNote()">SAVE</button>
                 <button class="btn" onclick="closeAdminNoteModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Chat Message Modal -->
+    <div class="modal" id="editChatModal">
+        <div class="modal-content">
+            <h2>EDIT MESSAGE</h2>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">Update your message:</p>
+            <input type="hidden" id="editChatMessageId">
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">MESSAGE</label>
+            <textarea id="editChatMessageText" placeholder="Enter your message..." style="min-height: 100px;" maxlength="500"></textarea>
+            <div id="editChatError" style="color: var(--error); font-size: 0.85rem; margin-bottom: 15px; display: none;"></div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="saveEditChatMessage()">SAVE</button>
+                <button class="btn" onclick="closeEditChatModal()">CANCEL</button>
             </div>
         </div>
     </div>
@@ -1920,8 +2066,260 @@ This request has been added to your Firebase database and is visible to all user
             // Load content for specific tabs
             if (tabName === 'news') {
                 loadNews();
+            } else if (tabName === 'chat') {
+                loadChat();
             }
         }
+
+        // ========================================
+        // HATCHCHAT
+        // ========================================
+
+        const chatRef = database.ref('chat/messages');
+        let chatLoaded = false;
+
+        // Load and display chat messages
+        function loadChat() {
+            if (chatLoaded) return; // Already listening
+            chatLoaded = true;
+
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+
+            container.innerHTML = '<div class="loading"></div>';
+
+            // Listen for new messages
+            chatRef.orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
+                container.innerHTML = '';
+
+                const messages = [];
+                snapshot.forEach((childSnapshot) => {
+                    messages.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+
+                if (messages.length === 0) {
+                    container.innerHTML = '<div class="no-requests">NO MESSAGES YET. BE THE FIRST TO SAY HELLO!</div>';
+                } else {
+                    messages.forEach(msg => {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'chat-message';
+
+                        const timestamp = new Date(msg.timestamp);
+                        const timeStr = timestamp.toLocaleString();
+
+                        const isOwner = msg.userId === currentUserId;
+                        const editedBadge = msg.editedAt ? '<span class="chat-edited-badge">(edited)</span>' : '';
+
+                        messageDiv.innerHTML = `
+                            <div class="chat-username">${escapeHtml(msg.username)}</div>
+                            <div class="chat-text">${escapeHtml(msg.message)}</div>
+                            <div class="chat-timestamp">${timeStr} ${editedBadge}</div>
+                            ${isOwner ? `
+                            <div class="chat-controls">
+                                <button class="chat-btn" onclick="editChatMessage('${msg.id}')">✎ Edit</button>
+                                <button class="chat-btn delete" onclick="deleteChatMessage('${msg.id}', '${escapeHtml(msg.message).replace(/'/g, "\\'")}')">✕ Delete</button>
+                            </div>
+                            ` : ''}
+                        `;
+
+                        container.appendChild(messageDiv);
+                    });
+
+                    // Scroll to bottom
+                    container.scrollTop = container.scrollHeight;
+                }
+
+                console.log(`[Chat] Loaded ${messages.length} messages`);
+            }, (error) => {
+                console.error('[Chat] Error loading messages:', error);
+                container.innerHTML = '<div class="no-requests">ERROR LOADING CHAT. CHECK FIREBASE CONFIGURATION.</div>';
+            });
+        }
+
+        // Send a chat message
+        async function sendChatMessage() {
+            const usernameInput = document.getElementById('chatUsername');
+            const messageInput = document.getElementById('chatMessage');
+
+            const username = usernameInput.value.trim();
+            const message = messageInput.value.trim();
+
+            if (!username) {
+                alert('Please enter a username');
+                usernameInput.focus();
+                return;
+            }
+
+            if (!message) {
+                alert('Please enter a message');
+                messageInput.focus();
+                return;
+            }
+
+            // Validate username (alphanumeric, spaces, underscores, hyphens only)
+            if (!/^[a-zA-Z0-9_ -]+$/.test(username)) {
+                alert('Username can only contain letters, numbers, spaces, underscores, and hyphens');
+                return;
+            }
+
+            try {
+                const newMessage = {
+                    username: username,
+                    message: message,
+                    timestamp: Date.now(),
+                    userId: currentUserId // Add ownership tracking
+                };
+
+                await chatRef.push(newMessage);
+
+                // Clear message input but keep username
+                messageInput.value = '';
+                messageInput.focus();
+
+                console.log('[Chat] Message sent successfully');
+
+            } catch (error) {
+                console.error('[Chat] Error sending message:', error);
+                alert(`ERROR: ${error.message}`);
+            }
+        }
+
+        // Delete a chat message
+        async function deleteChatMessage(messageId, messagePreview) {
+            try {
+                // Verify ownership
+                const snapshot = await chatRef.child(messageId).once('value');
+                const message = snapshot.val();
+
+                if (!message) {
+                    alert('ERROR: Message not found');
+                    return;
+                }
+
+                if (message.userId !== currentUserId && !isAdminMode) {
+                    alert('PERMISSION DENIED: You can only delete your own messages');
+                    return;
+                }
+
+                const confirmed = confirm(`DELETE MESSAGE?\n\n"${messagePreview.substring(0, 100)}${messagePreview.length > 100 ? '...' : ''}"\n\nThis action cannot be undone.`);
+
+                if (confirmed) {
+                    await chatRef.child(messageId).remove();
+                    console.log('[Chat] Message deleted');
+                }
+            } catch (error) {
+                console.error('[Chat] Error deleting message:', error);
+                alert(`ERROR: ${error.message}`);
+            }
+        }
+
+        // Open edit chat message modal
+        async function editChatMessage(messageId) {
+            try {
+                // Verify ownership
+                const snapshot = await chatRef.child(messageId).once('value');
+                const message = snapshot.val();
+
+                if (!message) {
+                    alert('ERROR: Message not found');
+                    return;
+                }
+
+                if (message.userId !== currentUserId && !isAdminMode) {
+                    alert('PERMISSION DENIED: You can only edit your own messages');
+                    return;
+                }
+
+                // Populate modal
+                document.getElementById('editChatMessageId').value = messageId;
+                document.getElementById('editChatMessageText').value = message.message;
+                document.getElementById('editChatError').style.display = 'none';
+
+                // Show modal
+                document.getElementById('editChatModal').classList.add('active');
+                document.getElementById('editChatMessageText').focus();
+            } catch (error) {
+                console.error('[Chat] Error opening edit modal:', error);
+                alert(`ERROR: ${error.message}`);
+            }
+        }
+
+        // Close edit chat message modal
+        function closeEditChatModal() {
+            document.getElementById('editChatModal').classList.remove('active');
+            document.getElementById('editChatMessageId').value = '';
+            document.getElementById('editChatMessageText').value = '';
+            document.getElementById('editChatError').style.display = 'none';
+        }
+
+        // Save edited chat message
+        async function saveEditChatMessage() {
+            const messageId = document.getElementById('editChatMessageId').value;
+            const newText = document.getElementById('editChatMessageText').value.trim();
+            const errorDiv = document.getElementById('editChatError');
+
+            if (!newText) {
+                errorDiv.textContent = 'Message cannot be empty';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                // Verify ownership again
+                const snapshot = await chatRef.child(messageId).once('value');
+                const message = snapshot.val();
+
+                if (!message) {
+                    alert('ERROR: Message not found');
+                    closeEditChatModal();
+                    return;
+                }
+
+                if (message.userId !== currentUserId && !isAdminMode) {
+                    alert('PERMISSION DENIED: You can only edit your own messages');
+                    closeEditChatModal();
+                    return;
+                }
+
+                // Update message with edited flag
+                const updates = {
+                    message: newText,
+                    editedAt: Date.now()
+                };
+
+                await chatRef.child(messageId).update(updates);
+                console.log('[Chat] Message edited successfully');
+                closeEditChatModal();
+
+            } catch (error) {
+                console.error('[Chat] Error saving message:', error);
+                errorDiv.textContent = `ERROR: ${error.message}`;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Allow Enter key to send (Shift+Enter for new line)
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageInput = document.getElementById('chatMessage');
+            if (messageInput) {
+                messageInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendChatMessage();
+                    }
+                });
+            }
+        });
 
         // ========================================
         // NEWS AGGREGATOR
