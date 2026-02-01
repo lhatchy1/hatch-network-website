@@ -381,6 +381,42 @@
             color: var(--text-muted);
         }
 
+        .chat-edited-badge {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-left: 5px;
+        }
+
+        .chat-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .chat-btn {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 3px 10px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+        }
+
+        .chat-btn:hover {
+            background-color: rgba(0, 255, 65, 0.1);
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+        }
+
+        .chat-btn.delete:hover {
+            background-color: rgba(255, 68, 68, 0.1);
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
         #chatMessages {
             scroll-behavior: smooth;
         }
@@ -1043,7 +1079,7 @@
             <li><a href="ts3server://ts.hatchnetwork.ch?port=9987">ts.hatchnetwork.ch</a></li>
         </ul>
         <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 20px; font-style: italic; opacity: 0.7;">
-            ⚠ Note: Your ability to edit your requests and send messages is tied to this browser. Clearing browser data will prevent you from managing your own requests. Chat messages cannot be edited or deleted once sent.
+            ⚠ Note: Your ability to edit your requests and messages is tied to this browser. Clearing browser data will prevent you from managing your own content.
         </p>
     </footer>
 
@@ -1102,6 +1138,22 @@
             <div class="modal-buttons">
                 <button class="btn" onclick="saveAdminNote()">SAVE</button>
                 <button class="btn" onclick="closeAdminNoteModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Chat Message Modal -->
+    <div class="modal" id="editChatModal">
+        <div class="modal-content">
+            <h2>EDIT MESSAGE</h2>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">Update your message:</p>
+            <input type="hidden" id="editChatMessageId">
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">MESSAGE</label>
+            <textarea id="editChatMessageText" placeholder="Enter your message..." style="min-height: 100px;" maxlength="500"></textarea>
+            <div id="editChatError" style="color: var(--error); font-size: 0.85rem; margin-bottom: 15px; display: none;"></div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="saveEditChatMessage()">SAVE</button>
+                <button class="btn" onclick="closeEditChatModal()">CANCEL</button>
             </div>
         </div>
     </div>
@@ -2058,10 +2110,19 @@ This request has been added to your Firebase database and is visible to all user
                         const timestamp = new Date(msg.timestamp);
                         const timeStr = timestamp.toLocaleString();
 
+                        const isOwner = msg.userId === currentUserId;
+                        const editedBadge = msg.editedAt ? '<span class="chat-edited-badge">(edited)</span>' : '';
+
                         messageDiv.innerHTML = `
                             <div class="chat-username">${escapeHtml(msg.username)}</div>
                             <div class="chat-text">${escapeHtml(msg.message)}</div>
-                            <div class="chat-timestamp">${timeStr}</div>
+                            <div class="chat-timestamp">${timeStr} ${editedBadge}</div>
+                            ${isOwner ? `
+                            <div class="chat-controls">
+                                <button class="chat-btn" onclick="editChatMessage('${msg.id}')">✎ Edit</button>
+                                <button class="chat-btn delete" onclick="deleteChatMessage('${msg.id}', '${escapeHtml(msg.message).replace(/'/g, "\\'")}')">✕ Delete</button>
+                            </div>
+                            ` : ''}
                         `;
 
                         container.appendChild(messageDiv);
@@ -2108,7 +2169,8 @@ This request has been added to your Firebase database and is visible to all user
                 const newMessage = {
                     username: username,
                     message: message,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    userId: currentUserId // Add ownership tracking
                 };
 
                 await chatRef.push(newMessage);
@@ -2122,6 +2184,120 @@ This request has been added to your Firebase database and is visible to all user
             } catch (error) {
                 console.error('[Chat] Error sending message:', error);
                 alert(`ERROR: ${error.message}`);
+            }
+        }
+
+        // Delete a chat message
+        async function deleteChatMessage(messageId, messagePreview) {
+            try {
+                // Verify ownership
+                const snapshot = await chatRef.child(messageId).once('value');
+                const message = snapshot.val();
+
+                if (!message) {
+                    alert('ERROR: Message not found');
+                    return;
+                }
+
+                if (message.userId !== currentUserId && !isAdminMode) {
+                    alert('PERMISSION DENIED: You can only delete your own messages');
+                    return;
+                }
+
+                const confirmed = confirm(`DELETE MESSAGE?\n\n"${messagePreview.substring(0, 100)}${messagePreview.length > 100 ? '...' : ''}"\n\nThis action cannot be undone.`);
+
+                if (confirmed) {
+                    await chatRef.child(messageId).remove();
+                    console.log('[Chat] Message deleted');
+                }
+            } catch (error) {
+                console.error('[Chat] Error deleting message:', error);
+                alert(`ERROR: ${error.message}`);
+            }
+        }
+
+        // Open edit chat message modal
+        async function editChatMessage(messageId) {
+            try {
+                // Verify ownership
+                const snapshot = await chatRef.child(messageId).once('value');
+                const message = snapshot.val();
+
+                if (!message) {
+                    alert('ERROR: Message not found');
+                    return;
+                }
+
+                if (message.userId !== currentUserId && !isAdminMode) {
+                    alert('PERMISSION DENIED: You can only edit your own messages');
+                    return;
+                }
+
+                // Populate modal
+                document.getElementById('editChatMessageId').value = messageId;
+                document.getElementById('editChatMessageText').value = message.message;
+                document.getElementById('editChatError').style.display = 'none';
+
+                // Show modal
+                document.getElementById('editChatModal').classList.add('active');
+                document.getElementById('editChatMessageText').focus();
+            } catch (error) {
+                console.error('[Chat] Error opening edit modal:', error);
+                alert(`ERROR: ${error.message}`);
+            }
+        }
+
+        // Close edit chat message modal
+        function closeEditChatModal() {
+            document.getElementById('editChatModal').classList.remove('active');
+            document.getElementById('editChatMessageId').value = '';
+            document.getElementById('editChatMessageText').value = '';
+            document.getElementById('editChatError').style.display = 'none';
+        }
+
+        // Save edited chat message
+        async function saveEditChatMessage() {
+            const messageId = document.getElementById('editChatMessageId').value;
+            const newText = document.getElementById('editChatMessageText').value.trim();
+            const errorDiv = document.getElementById('editChatError');
+
+            if (!newText) {
+                errorDiv.textContent = 'Message cannot be empty';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                // Verify ownership again
+                const snapshot = await chatRef.child(messageId).once('value');
+                const message = snapshot.val();
+
+                if (!message) {
+                    alert('ERROR: Message not found');
+                    closeEditChatModal();
+                    return;
+                }
+
+                if (message.userId !== currentUserId && !isAdminMode) {
+                    alert('PERMISSION DENIED: You can only edit your own messages');
+                    closeEditChatModal();
+                    return;
+                }
+
+                // Update message with edited flag
+                const updates = {
+                    message: newText,
+                    editedAt: Date.now()
+                };
+
+                await chatRef.child(messageId).update(updates);
+                console.log('[Chat] Message edited successfully');
+                closeEditChatModal();
+
+            } catch (error) {
+                console.error('[Chat] Error saving message:', error);
+                errorDiv.textContent = `ERROR: ${error.message}`;
+                errorDiv.style.display = 'block';
             }
         }
 
