@@ -249,6 +249,29 @@
             color: var(--text-secondary);
         }
 
+        .tab-notification {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background-color: var(--text-primary);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.8);
+            animation: pulse-notification 2s infinite;
+        }
+
+        @keyframes pulse-notification {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(1.2);
+            }
+        }
+
         .tab-content {
             display: none;
         }
@@ -902,9 +925,18 @@
 
         <!-- Tab Navigation -->
         <nav class="tab-navigation">
-            <button class="tab-btn active" onclick="switchTab('plex')">PLEX</button>
-            <button class="tab-btn" onclick="switchTab('news')">NEWS</button>
-            <button class="tab-btn" onclick="switchTab('chat')">HATCHCHAT</button>
+            <button class="tab-btn active" onclick="switchTab('plex')" id="tab-btn-plex">
+                PLEX
+                <span class="tab-notification" id="notification-plex" style="display: none;"></span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('news')" id="tab-btn-news">
+                NEWS
+                <span class="tab-notification" id="notification-news" style="display: none;"></span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('chat')" id="tab-btn-chat">
+                HATCHCHAT
+                <span class="tab-notification" id="notification-chat" style="display: none;"></span>
+            </button>
         </nav>
 
         <div class="error-message" id="errorMessage"></div>
@@ -1290,6 +1322,13 @@
                     id,
                     ...data
                 })).sort((a, b) => b.timestamp - a.timestamp);
+
+                // Check for new requests since last visit
+                const lastVisit = getLastVisit('plex');
+                const hasNewRequests = requestArray.some(r => r.timestamp > lastVisit);
+                if (hasNewRequests && !document.getElementById('plex-tab').classList.contains('active')) {
+                    showNotification('plex');
+                }
 
                 // Separate main queue and backlog items
                 const mainQueue = requestArray.filter(r => r.status !== 'Backlog');
@@ -2043,8 +2082,34 @@ This request has been added to your Firebase database and is visible to all user
         });
 
         // ========================================
-        // TAB SWITCHING
+        // TAB SWITCHING & NOTIFICATIONS
         // ========================================
+
+        // Track last visit times for each tab
+        function getLastVisit(tabName) {
+            const key = `lastVisit_${tabName}`;
+            const timestamp = localStorage.getItem(key);
+            return timestamp ? parseInt(timestamp) : 0;
+        }
+
+        function updateLastVisit(tabName) {
+            const key = `lastVisit_${tabName}`;
+            localStorage.setItem(key, Date.now().toString());
+        }
+
+        function showNotification(tabName) {
+            const notification = document.getElementById(`notification-${tabName}`);
+            if (notification) {
+                notification.style.display = 'block';
+            }
+        }
+
+        function hideNotification(tabName) {
+            const notification = document.getElementById(`notification-${tabName}`);
+            if (notification) {
+                notification.style.display = 'none';
+            }
+        }
 
         function switchTab(tabName) {
             // Hide all tab content
@@ -2066,8 +2131,14 @@ This request has been added to your Firebase database and is visible to all user
             }
 
             // Highlight selected button
-            const selectedButton = event.target;
-            selectedButton.classList.add('active');
+            const selectedButton = document.getElementById(`tab-btn-${tabName}`);
+            if (selectedButton) {
+                selectedButton.classList.add('active');
+            }
+
+            // Clear notification and update last visit time
+            hideNotification(tabName);
+            updateLastVisit(tabName);
 
             console.log(`[Tabs] Switched to ${tabName} tab`);
 
@@ -2107,6 +2178,13 @@ This request has been added to your Firebase database and is visible to all user
                         ...childSnapshot.val()
                     });
                 });
+
+                // Check for new messages since last visit
+                const lastVisit = getLastVisit('chat');
+                const hasNewMessages = messages.some(m => m.timestamp > lastVisit);
+                if (hasNewMessages && !document.getElementById('chat-tab').classList.contains('active')) {
+                    showNotification('chat');
+                }
 
                 if (messages.length === 0) {
                     container.innerHTML = '<div class="no-requests">NO MESSAGES YET. BE THE FIRST TO SAY HELLO!</div>';
@@ -2343,18 +2421,13 @@ This request has been added to your Firebase database and is visible to all user
                 enabled: true
             },
             {
-                name: 'Reuters World',
-                url: 'https://www.reutersagency.com/feed/?taxonomy=best-topics&post_type=best',
+                name: 'Associated Press',
+                url: 'https://apnews.com/apf-topnews',
                 enabled: true
             },
             {
-                name: 'NPR News',
-                url: 'https://feeds.npr.org/1001/rss.xml',
-                enabled: true
-            },
-            {
-                name: 'Hacker News',
-                url: 'https://news.ycombinator.com/rss',
+                name: 'Bleeping Computer',
+                url: 'https://www.bleepingcomputer.com/feed/',
                 enabled: true
             }
         ];
@@ -2406,6 +2479,13 @@ This request has been added to your Firebase database and is visible to all user
 
                 // Sort by date (newest first)
                 allArticles.sort((a, b) => b.pubDate - a.pubDate);
+
+                // Check for new articles since last visit
+                const lastVisit = getLastVisit('news');
+                const hasNewArticles = allArticles.some(a => a.pubDate.getTime() > lastVisit);
+                if (hasNewArticles && !document.getElementById('news-tab').classList.contains('active')) {
+                    showNotification('news');
+                }
 
                 // Display articles
                 if (allArticles.length === 0) {
@@ -2461,6 +2541,9 @@ This request has been added to your Firebase database and is visible to all user
         // ========================================
         // INITIALIZE ON PAGE LOAD
         // ========================================
+
+        // Initialize last visit time for plex tab (default active tab)
+        updateLastVisit('plex');
 
         // Load and display requests
         // Note: Cleanup only runs when admin is authenticated (see auth.onAuthStateChanged)
