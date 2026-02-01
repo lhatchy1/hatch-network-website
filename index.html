@@ -99,7 +99,7 @@
         }
 
         .header {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border-bottom: 2px solid var(--border-color);
             padding-bottom: 15px;
             text-align: center;
@@ -201,6 +201,86 @@
             color: var(--text-muted);
             margin-top: 10px;
             font-size: 0.9rem;
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab-btn {
+            background-color: var(--bg-secondary);
+            color: var(--text-muted);
+            border: 2px solid var(--border-color);
+            border-bottom: none;
+            padding: 12px 30px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            position: relative;
+            margin: 0 -1px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background-color: rgba(0, 255, 65, 0.05);
+        }
+
+        .tab-btn.active {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--bg-primary);
+            margin-bottom: -2px;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+        }
+
+        .tab-btn::before {
+            content: '[ ';
+            color: var(--text-secondary);
+        }
+
+        .tab-btn::after {
+            content: ' ]';
+            color: var(--text-secondary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            .tab-navigation {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .tab-btn {
+                border-bottom: 1px solid var(--border-color);
+                margin: 0;
+            }
+
+            .tab-btn.active {
+                border-bottom: 1px solid var(--border-color);
+                margin-bottom: 0;
+            }
+
+            .tab-btn:last-child {
+                border-bottom: 2px solid var(--border-color);
+            }
+
+            .tab-btn.active:last-child {
+                border-bottom: 2px solid var(--bg-primary);
+            }
         }
 
         /* Request Form */
@@ -663,7 +743,7 @@
         <div class="header">
             <img src="logo.svg" alt="Hatch Network Logo" class="logo">
             <h1>
-                PLEX REQUESTS
+                HATCH NETWORK
                 <span class="weather-widget" id="weatherWidget">
                     <span class="label">SERVER WEATHER:</span>
                     <span class="icon">🌡️</span>
@@ -671,10 +751,22 @@
                     <span class="condition">loading...</span>
                 </span>
             </h1>
-            <p>Submit your TV show and movie requests below. All submissions are tracked in the queue below.</p>
+            <p>Welcome to the Hatch Network portal</p>
+        </div>
 
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('plex')">PLEX</button>
+            <!-- Add more tabs here in the future -->
+        </nav>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <!-- Plex Tab Content -->
+        <div id="plex-tab" class="tab-content active">
             <!-- Plex Library Stats -->
-            <div class="plex-stats" id="plexStats">
+            <div class="plex-stats" id="plexStats" style="margin-bottom: 30px;">
                 <div class="plex-stat-item">
                     <span class="icon">🎬</span>
                     <span class="count" id="movieCount">--</span>
@@ -686,10 +778,6 @@
                     <span class="label">TV Shows</span>
                 </div>
             </div>
-        </div>
-
-        <div class="error-message" id="errorMessage"></div>
-        <div class="success-message" id="successMessage"></div>
 
         <!-- Request Form -->
         <section class="request-form">
@@ -763,6 +851,10 @@
                 </div>
             </div>
         </section>
+
+        </div>
+        <!-- End Plex Tab Content -->
+
     </main>
 
     <!-- Bottom Navigation -->
@@ -1710,6 +1802,36 @@ This request has been added to your Firebase database and is visible to all user
         document.getElementById('backlogToggle').addEventListener('mouseleave', function() {
             this.style.color = '';
         });
+
+        // ========================================
+        // TAB SWITCHING
+        // ========================================
+
+        function switchTab(tabName) {
+            // Hide all tab content
+            const allTabs = document.querySelectorAll('.tab-content');
+            allTabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all buttons
+            const allButtons = document.querySelectorAll('.tab-btn');
+            allButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab content
+            const selectedTab = document.getElementById(tabName + '-tab');
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+
+            // Highlight selected button
+            const selectedButton = event.target;
+            selectedButton.classList.add('active');
+
+            console.log(`[Tabs] Switched to ${tabName} tab`);
+        }
 
         // ========================================
         // INITIALIZE ON PAGE LOAD
