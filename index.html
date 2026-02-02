@@ -1019,7 +1019,7 @@
                 <span class="tab-notification" id="notification-chat" style="display: none;"></span>
             </button>
             <button class="tab-btn" onclick="switchTab('webcams')" id="tab-btn-webcams">
-                LIVE NEWS
+                STREAMS
                 <span class="tab-notification" id="notification-webcams" style="display: none;"></span>
             </button>
         </nav>
@@ -1195,65 +1195,101 @@
         </div>
         <!-- End HatchChat Tab Content -->
 
-        <!-- Live News Tab Content -->
+        <!-- Streams Tab Content -->
         <div id="webcams-tab" class="tab-content">
-            <div style="margin-bottom: 20px;">
-                <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 15px;">
-                    <span style="color: var(--text-secondary);"># </span>LIVE NEWS STREAMS
+            <div style="margin-bottom: 30px;">
+                <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 0;">
+                    <span style="color: var(--text-secondary);"># </span>STREAMS
                 </h2>
+            </div>
+
+            <!-- Live News Section -->
+            <div style="margin-bottom: 40px;">
+                <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 10px;">
+                    <span style="color: var(--text-secondary);">> </span>LIVE NEWS
+                </h3>
                 <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">
                     24/7 live news broadcasts from major networks around the world.
                 </p>
+
+                <!-- News Streams Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px;">
+
+                    <!-- NBC News -->
+                    <div class="webcam-item">
+                        <div class="webcam-header">
+                            <h3>NBC NEWS</h3>
+                        </div>
+                        <div class="webcam-frame">
+                            <iframe src="https://www.youtube.com/embed/MINldxbTOSI?autoplay=1&mute=1&controls=1&modestbranding=1"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                    </div>
+
+                    <!-- Fox News -->
+                    <div class="webcam-item">
+                        <div class="webcam-header">
+                            <h3>FOX NEWS</h3>
+                        </div>
+                        <div class="webcam-frame">
+                            <iframe src="https://www.youtube.com/embed/PAWpRiX4ChU?autoplay=1&mute=1&controls=1&modestbranding=1"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                    </div>
+
+                    <!-- Sky News -->
+                    <div class="webcam-item">
+                        <div class="webcam-header">
+                            <h3>SKY NEWS</h3>
+                        </div>
+                        <div class="webcam-frame">
+                            <iframe src="https://www.youtube.com/embed/YDvsBbKfLPA?autoplay=1&mute=1&controls=1&modestbranding=1"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <!-- News Streams Grid -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px;">
+            <!-- Other Streams Section -->
+            <div style="margin-bottom: 40px;">
+                <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 10px;">
+                    <span style="color: var(--text-secondary);">> </span>OTHER STREAMS
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+                    Live streams from around the world and beyond.
+                </p>
 
-                <!-- NBC News -->
-                <div class="webcam-item">
-                    <div class="webcam-header">
-                        <h3>NBC NEWS</h3>
+                <!-- Other Streams Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px;">
+
+                    <!-- ISS Live Feed -->
+                    <div class="webcam-item">
+                        <div class="webcam-header">
+                            <h3>ISS LIVE FEED</h3>
+                        </div>
+                        <div class="webcam-frame">
+                            <iframe src="https://www.youtube.com/embed/aB1yRz0HhdY?autoplay=1&mute=1&controls=1&modestbranding=1"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
                     </div>
-                    <div class="webcam-frame">
-                        <iframe src="https://www.youtube.com/embed/MINldxbTOSI?autoplay=1&mute=1&controls=1&modestbranding=1"
-                                frameborder="0"
-                                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                                allowfullscreen>
-                        </iframe>
-                    </div>
+
                 </div>
-
-                <!-- Fox News -->
-                <div class="webcam-item">
-                    <div class="webcam-header">
-                        <h3>FOX NEWS</h3>
-                    </div>
-                    <div class="webcam-frame">
-                        <iframe src="https://www.youtube.com/embed/PAWpRiX4ChU?autoplay=1&mute=1&controls=1&modestbranding=1"
-                                frameborder="0"
-                                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                                allowfullscreen>
-                        </iframe>
-                    </div>
-                </div>
-
-                <!-- Sky News -->
-                <div class="webcam-item">
-                    <div class="webcam-header">
-                        <h3>SKY NEWS</h3>
-                    </div>
-                    <div class="webcam-frame">
-                        <iframe src="https://www.youtube.com/embed/YDvsBbKfLPA?autoplay=1&mute=1&controls=1&modestbranding=1"
-                                frameborder="0"
-                                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                                allowfullscreen>
-                        </iframe>
-                    </div>
-                </div>
-
             </div>
         </div>
-        <!-- End Live News Tab Content -->
+        <!-- End Streams Tab Content -->
 
     </main>
 
