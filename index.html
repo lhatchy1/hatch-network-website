@@ -1004,12 +1004,8 @@
                 <span class="tab-notification" id="notification-chat" style="display: none;"></span>
             </button>
             <button class="tab-btn" onclick="switchTab('webcams')" id="tab-btn-webcams">
-                WEBCAMS
+                LIVE NEWS
                 <span class="tab-notification" id="notification-webcams" style="display: none;"></span>
-            </button>
-            <button class="tab-btn" onclick="switchTab('weather')" id="tab-btn-weather">
-                WEATHER
-                <span class="tab-notification" id="notification-weather" style="display: none;"></span>
             </button>
         </nav>
 
@@ -1184,113 +1180,57 @@
         </div>
         <!-- End HatchChat Tab Content -->
 
-        <!-- Webcams Tab Content -->
+        <!-- Live News Tab Content -->
         <div id="webcams-tab" class="tab-content">
             <div style="margin-bottom: 20px;">
                 <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 15px;">
-                    <span style="color: var(--text-secondary);"># </span>GLOBAL WEBCAMS
+                    <span style="color: var(--text-secondary);"># </span>LIVE NEWS STREAMS
                 </h2>
                 <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">
-                    Live views from major cities around the world with local times.
+                    24/7 live news broadcasts from major networks around the world.
                 </p>
             </div>
 
-            <!-- Webcam Grid -->
-            <div id="webcamsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px;">
+            <!-- News Streams Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px;">
 
-                <!-- Los Angeles -->
+                <!-- NBC News -->
                 <div class="webcam-item">
                     <div class="webcam-header">
-                        <h3>LOS ANGELES, USA</h3>
-                        <div class="webcam-time" id="time-la">--:--</div>
+                        <h3>NBC NEWS</h3>
                     </div>
                     <div class="webcam-frame">
-                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1512339061/day"
+                        <iframe src="https://www.youtube.com/embed/MINldxbTOSI?autoplay=1&mute=1&controls=1&modestbranding=1"
                                 frameborder="0"
+                                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                                 allowfullscreen>
                         </iframe>
                     </div>
                 </div>
 
-                <!-- New York -->
+                <!-- Fox News -->
                 <div class="webcam-item">
                     <div class="webcam-header">
-                        <h3>NEW YORK, USA</h3>
-                        <div class="webcam-time" id="time-ny">--:--</div>
+                        <h3>FOX NEWS</h3>
                     </div>
                     <div class="webcam-frame">
-                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1341940811/day"
+                        <iframe src="https://www.youtube.com/embed/PAWpRiX4ChU?autoplay=1&mute=1&controls=1&modestbranding=1"
                                 frameborder="0"
+                                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                                 allowfullscreen>
                         </iframe>
                     </div>
                 </div>
 
-                <!-- Rio -->
+                <!-- Sky News -->
                 <div class="webcam-item">
                     <div class="webcam-header">
-                        <h3>RIO DE JANEIRO, BRAZIL</h3>
-                        <div class="webcam-time" id="time-rio">--:--</div>
+                        <h3>SKY NEWS</h3>
                     </div>
                     <div class="webcam-frame">
-                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1421085031/day"
+                        <iframe src="https://www.youtube.com/embed/YDvsBbKfLPA?autoplay=1&mute=1&controls=1&modestbranding=1"
                                 frameborder="0"
-                                allowfullscreen>
-                        </iframe>
-                    </div>
-                </div>
-
-                <!-- London -->
-                <div class="webcam-item">
-                    <div class="webcam-header">
-                        <h3>LONDON, UK</h3>
-                        <div class="webcam-time" id="time-london">--:--</div>
-                    </div>
-                    <div class="webcam-frame">
-                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1508415448/day"
-                                frameborder="0"
-                                allowfullscreen>
-                        </iframe>
-                    </div>
-                </div>
-
-                <!-- Cape Town -->
-                <div class="webcam-item">
-                    <div class="webcam-header">
-                        <h3>CAPE TOWN, SOUTH AFRICA</h3>
-                        <div class="webcam-time" id="time-capetown">--:--</div>
-                    </div>
-                    <div class="webcam-frame">
-                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1275987161/day"
-                                frameborder="0"
-                                allowfullscreen>
-                        </iframe>
-                    </div>
-                </div>
-
-                <!-- Tokyo -->
-                <div class="webcam-item">
-                    <div class="webcam-header">
-                        <h3>TOKYO, JAPAN</h3>
-                        <div class="webcam-time" id="time-tokyo">--:--</div>
-                    </div>
-                    <div class="webcam-frame">
-                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1530613999/day"
-                                frameborder="0"
-                                allowfullscreen>
-                        </iframe>
-                    </div>
-                </div>
-
-                <!-- Auckland -->
-                <div class="webcam-item">
-                    <div class="webcam-header">
-                        <h3>AUCKLAND, NEW ZEALAND</h3>
-                        <div class="webcam-time" id="time-auckland">--:--</div>
-                    </div>
-                    <div class="webcam-frame">
-                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1434875991/day"
-                                frameborder="0"
+                                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                                 allowfullscreen>
                         </iframe>
                     </div>
@@ -1298,31 +1238,7 @@
 
             </div>
         </div>
-        <!-- End Webcams Tab Content -->
-
-        <!-- Weather Tab Content -->
-        <div id="weather-tab" class="tab-content">
-            <div style="margin-bottom: 20px;">
-                <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 15px;">
-                    <span style="color: var(--text-secondary);"># </span>GLOBAL WEATHER MAP
-                </h2>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">
-                    Real-time weather conditions, wind patterns, and temperature data across the globe.
-                </p>
-            </div>
-
-            <!-- Global Weather Map -->
-            <div style="background-color: var(--bg-secondary); border: 2px solid var(--border-color); padding: 15px;">
-                <div style="position: relative; width: 100%; height: 700px; background-color: var(--bg-primary); border: 1px solid var(--border-color);">
-                    <iframe src="https://embed.windy.com/embed2.html?lat=20&lon=0&detailLat=20&detailLon=0&width=100%&height=700&zoom=2&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
-                            frameborder="0"
-                            style="width: 100%; height: 100%;"
-                            allowfullscreen>
-                    </iframe>
-                </div>
-            </div>
-        </div>
-        <!-- End Weather Tab Content -->
+        <!-- End Live News Tab Content -->
 
     </main>
 
@@ -2361,8 +2277,6 @@ This request has been added to your Firebase database and is visible to all user
                 loadNews();
             } else if (tabName === 'chat') {
                 loadChat();
-            } else if (tabName === 'webcams') {
-                startWorldClocks();
             }
         }
 
@@ -2752,61 +2666,6 @@ This request has been added to your Firebase database and is visible to all user
             if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
 
             return date.toLocaleDateString();
-        }
-
-        // ========================================
-        // WEBCAMS & WORLD CLOCKS
-        // ========================================
-
-        let clockInterval = null;
-
-        // City timezone mappings
-        const cityTimezones = {
-            'la': 'America/Los_Angeles',
-            'ny': 'America/New_York',
-            'london': 'Europe/London',
-            'capetown': 'Africa/Johannesburg',
-            'rio': 'America/Sao_Paulo',
-            'tokyo': 'Asia/Tokyo',
-            'auckland': 'Pacific/Auckland'
-        };
-
-        // Update all world clocks
-        function updateWorldClocks() {
-            Object.keys(cityTimezones).forEach(city => {
-                const timeElement = document.getElementById(`time-${city}`);
-                if (timeElement) {
-                    try {
-                        const now = new Date();
-                        const formatter = new Intl.DateTimeFormat('en-US', {
-                            timeZone: cityTimezones[city],
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                            hour12: false
-                        });
-                        timeElement.textContent = formatter.format(now);
-                    } catch (error) {
-                        console.error(`[Webcams] Error updating clock for ${city}:`, error);
-                        timeElement.textContent = '--:--:--';
-                    }
-                }
-            });
-        }
-
-        // Start updating world clocks
-        function startWorldClocks() {
-            // Update immediately
-            updateWorldClocks();
-
-            // Clear any existing interval
-            if (clockInterval) {
-                clearInterval(clockInterval);
-            }
-
-            // Update every second
-            clockInterval = setInterval(updateWorldClocks, 1000);
-            console.log('[Webcams] World clocks started');
         }
 
         // ========================================
