@@ -1007,6 +1007,10 @@
                 WEBCAMS
                 <span class="tab-notification" id="notification-webcams" style="display: none;"></span>
             </button>
+            <button class="tab-btn" onclick="switchTab('weather')" id="tab-btn-weather">
+                WEATHER
+                <span class="tab-notification" id="notification-weather" style="display: none;"></span>
+            </button>
         </nav>
 
         <div class="error-message" id="errorMessage"></div>
@@ -1201,7 +1205,7 @@
                         <div class="webcam-time" id="time-la">--:--</div>
                     </div>
                     <div class="webcam-frame">
-                        <iframe src="https://embed.windy.com/embed2.html?lat=33.992&lon=-118.473&detailLat=33.992&detailLon=-118.473&width=650&height=450&zoom=11&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1&webcam=1512339061"
+                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1512339061/day"
                                 frameborder="0"
                                 allowfullscreen>
                         </iframe>
@@ -1215,7 +1219,7 @@
                         <div class="webcam-time" id="time-ny">--:--</div>
                     </div>
                     <div class="webcam-frame">
-                        <iframe src="https://embed.windy.com/embed2.html?lat=40.758&lon=-73.985&detailLat=40.758&detailLon=-73.985&width=650&height=450&zoom=11&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1&webcam=1341940811"
+                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1341940811/day"
                                 frameborder="0"
                                 allowfullscreen>
                         </iframe>
@@ -1229,7 +1233,7 @@
                         <div class="webcam-time" id="time-rio">--:--</div>
                     </div>
                     <div class="webcam-frame">
-                        <iframe src="https://embed.windy.com/embed2.html?lat=-22.971&lon=-43.182&detailLat=-22.971&detailLon=-43.182&width=650&height=450&zoom=11&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1&webcam=1421085031"
+                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1421085031/day"
                                 frameborder="0"
                                 allowfullscreen>
                         </iframe>
@@ -1243,7 +1247,7 @@
                         <div class="webcam-time" id="time-london">--:--</div>
                     </div>
                     <div class="webcam-frame">
-                        <iframe src="https://embed.windy.com/embed2.html?lat=51.507&lon=-0.127&detailLat=51.507&detailLon=-0.127&width=650&height=450&zoom=11&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1&webcam=1508415448"
+                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1508415448/day"
                                 frameborder="0"
                                 allowfullscreen>
                         </iframe>
@@ -1257,7 +1261,7 @@
                         <div class="webcam-time" id="time-capetown">--:--</div>
                     </div>
                     <div class="webcam-frame">
-                        <iframe src="https://embed.windy.com/embed2.html?lat=-33.924&lon=18.424&detailLat=-33.924&detailLon=18.424&width=650&height=450&zoom=11&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1&webcam=1275987161"
+                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1275987161/day"
                                 frameborder="0"
                                 allowfullscreen>
                         </iframe>
@@ -1271,7 +1275,7 @@
                         <div class="webcam-time" id="time-tokyo">--:--</div>
                     </div>
                     <div class="webcam-frame">
-                        <iframe src="https://embed.windy.com/embed2.html?lat=35.689&lon=139.692&detailLat=35.689&detailLon=139.692&width=650&height=450&zoom=11&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1&webcam=1530613999"
+                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1530613999/day"
                                 frameborder="0"
                                 allowfullscreen>
                         </iframe>
@@ -1285,7 +1289,7 @@
                         <div class="webcam-time" id="time-auckland">--:--</div>
                     </div>
                     <div class="webcam-frame">
-                        <iframe src="https://embed.windy.com/embed2.html?lat=-36.848&lon=174.763&detailLat=-36.848&detailLon=174.763&width=650&height=450&zoom=11&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1&webcam=1434875991"
+                        <iframe src="https://webcams.windy.com/webcams/public/embed/player/1434875991/day"
                                 frameborder="0"
                                 allowfullscreen>
                         </iframe>
@@ -1295,6 +1299,30 @@
             </div>
         </div>
         <!-- End Webcams Tab Content -->
+
+        <!-- Weather Tab Content -->
+        <div id="weather-tab" class="tab-content">
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 15px;">
+                    <span style="color: var(--text-secondary);"># </span>GLOBAL WEATHER MAP
+                </h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+                    Real-time weather conditions, wind patterns, and temperature data across the globe.
+                </p>
+            </div>
+
+            <!-- Global Weather Map -->
+            <div style="background-color: var(--bg-secondary); border: 2px solid var(--border-color); padding: 15px;">
+                <div style="position: relative; width: 100%; height: 700px; background-color: var(--bg-primary); border: 1px solid var(--border-color);">
+                    <iframe src="https://embed.windy.com/embed2.html?lat=20&lon=0&detailLat=20&detailLon=0&width=100%&height=700&zoom=2&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
+                            frameborder="0"
+                            style="width: 100%; height: 100%;"
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </div>
+        <!-- End Weather Tab Content -->
 
     </main>
 
