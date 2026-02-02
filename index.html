@@ -465,6 +465,15 @@
 
         #chatMessages {
             scroll-behavior: smooth;
+            position: relative;
+        }
+
+        #chatMessages::after {
+            content: '█';
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+            animation: blink-cursor 1s infinite;
+            margin-left: 2px;
         }
 
         /* Request Form */
