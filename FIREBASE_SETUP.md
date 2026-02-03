@@ -106,7 +106,7 @@ To secure your database and allow users to edit their own requests, update your 
                         newData.child('username').val().length <= 20 &&
                         newData.child('message').isString() &&
                         newData.child('message').val().length > 0 &&
-                        newData.child('message').val().length <= 500 &&
+                        newData.child('message').val().length <= 1000 &&
                         newData.child('userId').isString() &&
                         newData.child('timestamp').isNumber() &&
                         (!newData.hasChild('editedAt') || newData.child('editedAt').isNumber())"
