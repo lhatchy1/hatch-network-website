@@ -376,6 +376,21 @@
             border-left-color: var(--text-primary);
         }
 
+        .chat-message.deleted {
+            background-color: rgba(255, 68, 68, 0.05);
+            border-left-color: #ff4444;
+            opacity: 0.7;
+        }
+
+        .chat-message.deleted .chat-username {
+            color: #ff4444;
+        }
+
+        .chat-message.deleted .chat-text {
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
         .chat-header {
             display: flex;
             justify-content: space-between;
@@ -474,6 +489,31 @@
             font-family: 'Courier New', Courier, monospace;
             animation: blink-cursor 1s infinite;
             margin-left: 2px;
+        }
+
+        /* Terminal-style green scrollbar */
+        #chatMessages::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        #chatMessages::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-left: 1px solid var(--border-color);
+        }
+
+        #chatMessages::-webkit-scrollbar-thumb {
+            background: #00ff00;
+            border: none;
+        }
+
+        #chatMessages::-webkit-scrollbar-thumb:hover {
+            background: #00dd00;
+        }
+
+        /* Firefox scrollbar */
+        #chatMessages {
+            scrollbar-width: thin;
+            scrollbar-color: #00ff00 var(--bg-tertiary);
         }
 
         /* Request Form */
@@ -836,6 +876,23 @@
             animation: blink 1s infinite;
         }
 
+        .toggle-controls-btn {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 3px 10px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.75rem;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        .toggle-controls-btn:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -877,6 +934,7 @@
             border: 1px solid var(--border-color);
             color: var(--text-primary);
             font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
             margin-bottom: 20px;
         }
 
@@ -902,6 +960,7 @@
             border: 1px solid var(--border-color);
             color: var(--text-primary);
             font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
             resize: vertical;
             min-height: 80px;
             margin-bottom: 20px;
@@ -1584,7 +1643,8 @@
                 ${request.adminNote ? `<div class="admin-note"><strong>Admin note:</strong> ${request.adminNote}</div>` : ''}
                 <span class="request-status ${statusClass}">[${request.status.toUpperCase()}]</span>
                 ${canEdit ? `
-                <div class="admin-controls active" id="controls-${request.id}">
+                <button class="toggle-controls-btn" onclick="toggleControls('controls-${request.id}')">⋯ EDIT</button>
+                <div class="admin-controls" id="controls-${request.id}">
                     ${isAdminMode ? `
                     <button class="admin-btn status-new" onclick="changeStatus('${request.id}', 'New')">→ NEW</button>
                     <button class="admin-btn status-searching" onclick="changeStatus('${request.id}', 'Searching')">→ SEARCHING</button>
@@ -2315,6 +2375,20 @@ This request has been added to your Firebase database and is visible to all user
             }
         }
 
+        function toggleControls(controlsId) {
+            const controls = document.getElementById(controlsId);
+            if (controls) {
+                // For admin-controls, toggle the 'active' class
+                if (controls.classList.contains('admin-controls')) {
+                    controls.classList.toggle('active');
+                }
+                // For chat-controls, toggle inline display style
+                else {
+                    controls.style.display = controls.style.display === 'none' ? 'flex' : 'none';
+                }
+            }
+        }
+
         function switchTab(tabName) {
             // Hide all tab content
             const allTabs = document.querySelectorAll('.tab-content');
@@ -2395,7 +2469,7 @@ This request has been added to your Firebase database and is visible to all user
                 } else {
                     messages.forEach(msg => {
                         const messageDiv = document.createElement('div');
-                        messageDiv.className = 'chat-message';
+                        messageDiv.className = msg.deletedByAdmin ? 'chat-message deleted' : 'chat-message';
 
                         const timestamp = new Date(msg.timestamp);
                         const timeStr = timestamp.toLocaleString();
@@ -2403,14 +2477,18 @@ This request has been added to your Firebase database and is visible to all user
                         const isOwner = msg.userId === currentUserId;
                         const editedBadge = msg.editedAt ? '<span class="chat-edited-badge">(edited)</span>' : '';
 
+                        // Don't show controls for deleted messages
+                        const showControls = isOwner && !msg.deletedByAdmin;
+
                         messageDiv.innerHTML = `
                             <div class="chat-header">
                                 <div class="chat-username">${escapeHtml(msg.username)}</div>
                                 <div class="chat-timestamp">${timeStr}${editedBadge}</div>
                             </div>
-                            <div class="chat-text">${linkifyUrls(msg.message)}</div>
-                            ${isOwner ? `
-                            <div class="chat-controls">
+                            <div class="chat-text">${msg.deletedByAdmin ? msg.message : linkifyUrls(msg.message)}</div>
+                            ${showControls ? `
+                            <button class="toggle-controls-btn" onclick="toggleControls('chat-controls-${msg.id}')" style="font-size: 0.65rem; padding: 2px 8px; margin-top: 4px;">⋯</button>
+                            <div class="chat-controls" id="chat-controls-${msg.id}" style="display: none;">
                                 <button class="chat-btn" onclick="editChatMessage('${msg.id}')">✎ Edit</button>
                                 <button class="chat-btn delete" onclick="deleteChatMessage('${msg.id}', '${escapeHtml(msg.message).replace(/'/g, "\\'")}')">✕ Delete</button>
                             </div>
@@ -2428,6 +2506,25 @@ This request has been added to your Firebase database and is visible to all user
             }, (error) => {
                 console.error('[Chat] Error loading messages:', error);
                 container.innerHTML = '<div class="no-requests">ERROR LOADING CHAT. CHECK FIREBASE CONFIGURATION.</div>';
+            });
+        }
+
+        // Initialize chat notifications listener on page load
+        function initChatNotifications() {
+            // Listen for new messages to trigger notifications
+            chatRef.orderByChild('timestamp').limitToLast(1).on('child_added', (snapshot) => {
+                const message = snapshot.val();
+                if (!message) return;
+
+                // Only show notification if chat tab is not active
+                const chatTab = document.getElementById('chat-tab');
+                if (!chatTab || chatTab.classList.contains('active')) return;
+
+                // Check if message is newer than last visit
+                const lastVisit = getLastVisit('chat');
+                if (message.timestamp > lastVisit) {
+                    showNotification('chat');
+                }
             });
         }
 
@@ -2499,8 +2596,21 @@ This request has been added to your Firebase database and is visible to all user
                 const confirmed = confirm(`DELETE MESSAGE?\n\n"${messagePreview.substring(0, 100)}${messagePreview.length > 100 ? '...' : ''}"\n\nThis action cannot be undone.`);
 
                 if (confirmed) {
-                    await chatRef.child(messageId).remove();
-                    console.log('[Chat] Message deleted');
+                    // If admin is deleting someone else's message, replace with removal notice
+                    if (isAdminMode && message.userId !== currentUserId) {
+                        const updates = {
+                            username: '[removed]',
+                            message: 'This comment was removed by an admin.',
+                            deletedByAdmin: true,
+                            deletedAt: Date.now()
+                        };
+                        await chatRef.child(messageId).update(updates);
+                        console.log('[Chat] Message removed by admin');
+                    } else {
+                        // User deleting their own message - remove completely
+                        await chatRef.child(messageId).remove();
+                        console.log('[Chat] Message deleted');
+                    }
                 }
             } catch (error) {
                 console.error('[Chat] Error deleting message:', error);
@@ -2767,6 +2877,9 @@ This request has been added to your Firebase database and is visible to all user
 
         // Initialize last visit time for plex tab (default active tab)
         updateLastVisit('plex');
+
+        // Initialize chat notifications listener
+        initChatNotifications();
 
         // Load and display requests
         // Note: Cleanup only runs when admin is authenticated (see auth.onAuthStateChanged)
