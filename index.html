@@ -876,6 +876,23 @@
             animation: blink 1s infinite;
         }
 
+        .toggle-controls-btn {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 3px 10px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.75rem;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        .toggle-controls-btn:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -917,6 +934,7 @@
             border: 1px solid var(--border-color);
             color: var(--text-primary);
             font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
             margin-bottom: 20px;
         }
 
@@ -942,6 +960,7 @@
             border: 1px solid var(--border-color);
             color: var(--text-primary);
             font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
             resize: vertical;
             min-height: 80px;
             margin-bottom: 20px;
@@ -1624,7 +1643,8 @@
                 ${request.adminNote ? `<div class="admin-note"><strong>Admin note:</strong> ${request.adminNote}</div>` : ''}
                 <span class="request-status ${statusClass}">[${request.status.toUpperCase()}]</span>
                 ${canEdit ? `
-                <div class="admin-controls active" id="controls-${request.id}">
+                <button class="toggle-controls-btn" onclick="toggleControls('controls-${request.id}')">⋯ EDIT</button>
+                <div class="admin-controls" id="controls-${request.id}">
                     ${isAdminMode ? `
                     <button class="admin-btn status-new" onclick="changeStatus('${request.id}', 'New')">→ NEW</button>
                     <button class="admin-btn status-searching" onclick="changeStatus('${request.id}', 'Searching')">→ SEARCHING</button>
@@ -2355,6 +2375,20 @@ This request has been added to your Firebase database and is visible to all user
             }
         }
 
+        function toggleControls(controlsId) {
+            const controls = document.getElementById(controlsId);
+            if (controls) {
+                // For admin-controls, toggle the 'active' class
+                if (controls.classList.contains('admin-controls')) {
+                    controls.classList.toggle('active');
+                }
+                // For chat-controls, toggle inline display style
+                else {
+                    controls.style.display = controls.style.display === 'none' ? 'flex' : 'none';
+                }
+            }
+        }
+
         function switchTab(tabName) {
             // Hide all tab content
             const allTabs = document.querySelectorAll('.tab-content');
@@ -2453,7 +2487,8 @@ This request has been added to your Firebase database and is visible to all user
                             </div>
                             <div class="chat-text">${msg.deletedByAdmin ? msg.message : linkifyUrls(msg.message)}</div>
                             ${showControls ? `
-                            <div class="chat-controls">
+                            <button class="toggle-controls-btn" onclick="toggleControls('chat-controls-${msg.id}')" style="font-size: 0.65rem; padding: 2px 8px; margin-top: 4px;">⋯</button>
+                            <div class="chat-controls" id="chat-controls-${msg.id}" style="display: none;">
                                 <button class="chat-btn" onclick="editChatMessage('${msg.id}')">✎ Edit</button>
                                 <button class="chat-btn delete" onclick="deleteChatMessage('${msg.id}', '${escapeHtml(msg.message).replace(/'/g, "\\'")}')">✕ Delete</button>
                             </div>
@@ -2471,6 +2506,25 @@ This request has been added to your Firebase database and is visible to all user
             }, (error) => {
                 console.error('[Chat] Error loading messages:', error);
                 container.innerHTML = '<div class="no-requests">ERROR LOADING CHAT. CHECK FIREBASE CONFIGURATION.</div>';
+            });
+        }
+
+        // Initialize chat notifications listener on page load
+        function initChatNotifications() {
+            // Listen for new messages to trigger notifications
+            chatRef.orderByChild('timestamp').limitToLast(1).on('child_added', (snapshot) => {
+                const message = snapshot.val();
+                if (!message) return;
+
+                // Only show notification if chat tab is not active
+                const chatTab = document.getElementById('chat-tab');
+                if (!chatTab || chatTab.classList.contains('active')) return;
+
+                // Check if message is newer than last visit
+                const lastVisit = getLastVisit('chat');
+                if (message.timestamp > lastVisit) {
+                    showNotification('chat');
+                }
             });
         }
 
@@ -2823,6 +2877,9 @@ This request has been added to your Firebase database and is visible to all user
 
         // Initialize last visit time for plex tab (default active tab)
         updateLastVisit('plex');
+
+        // Initialize chat notifications listener
+        initChatNotifications();
 
         // Load and display requests
         // Note: Cleanup only runs when admin is authenticated (see auth.onAuthStateChanged)
