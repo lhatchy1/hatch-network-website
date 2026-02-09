@@ -1172,7 +1172,7 @@
         <section class="request-list">
             <h2>REQUEST QUEUE</h2>
             <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px; font-style: italic;">
-                Note: Completed requests are automatically removed after 7 days. You can edit or delete your own requests at any time.
+                Note: Completed requests are automatically removed after 3 days. You can edit or delete your own requests at any time.
             </p>
             <div id="requestContainer">
                 <div class="loading"></div>
@@ -1787,8 +1787,8 @@ This request has been added to your Firebase database and is visible to all user
         // ========================================
 
         async function cleanupOldCompletedRequests() {
-            const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-            const cutoffTime = Date.now() - SEVEN_DAYS_MS;
+            const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
+            const cutoffTime = Date.now() - THREE_DAYS_MS;
 
             try {
                 const snapshot = await requestsRef.once('value');
@@ -1812,7 +1812,7 @@ This request has been added to your Firebase database and is visible to all user
                             updates[`${id}/completedAt`] = Date.now();
                             timestampedCount++;
                         } else {
-                            // If completed more than 7 days ago, mark for deletion
+                            // If completed more than 3 days ago, mark for deletion
                             if (data.completedAt < cutoffTime) {
                                 console.log(`[Cleanup] Removing old completed request: ${data.title} (completed ${new Date(data.completedAt).toLocaleDateString()})`);
                                 updates[id] = null; // null value deletes the entry
