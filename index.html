@@ -1090,6 +1090,10 @@
                 STREAMS
                 <span class="tab-notification" id="notification-webcams" style="display: none;"></span>
             </button>
+            <button class="tab-btn" onclick="switchTab('map')" id="tab-btn-map">
+                MAP
+                <span class="tab-notification" id="notification-map" style="display: none;"></span>
+            </button>
         </nav>
 
         <div class="error-message" id="errorMessage"></div>
@@ -1168,7 +1172,7 @@
         <section class="request-list">
             <h2>REQUEST QUEUE</h2>
             <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px; font-style: italic;">
-                Note: Completed requests are automatically removed after 7 days. You can edit or delete your own requests at any time.
+                Note: Completed requests are automatically removed after 3 days. You can edit or delete your own requests at any time.
             </p>
             <div id="requestContainer">
                 <div class="loading"></div>
@@ -1373,6 +1377,22 @@
         </div>
         <!-- End Streams Tab Content -->
 
+        <!-- Map Tab Content -->
+        <div id="map-tab" class="tab-content">
+            <div style="margin-bottom: 30px;">
+                <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 15px;">
+                    <span style="color: var(--text-secondary);"># </span>ARCGIS MAP
+                </h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+                    Interactive map powered by ArcGIS. Use mouse wheel to zoom, click and drag to pan.
+                </p>
+            </div>
+
+            <!-- ArcGIS Map Container -->
+            <div id="mapContainer" style="width: 100%; height: 700px; border: 2px solid var(--border-color); border-radius: 4px; background-color: var(--bg-tertiary);"></div>
+        </div>
+        <!-- End Map Tab Content -->
+
     </main>
 
     <!-- Bottom Navigation -->
@@ -1465,6 +1485,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- ArcGIS API -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.31/esri/themes/dark/main.css">
+    <script src="https://js.arcgis.com/4.31/"></script>
 
     <script>
         // ========================================
@@ -1763,8 +1787,8 @@ This request has been added to your Firebase database and is visible to all user
         // ========================================
 
         async function cleanupOldCompletedRequests() {
-            const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-            const cutoffTime = Date.now() - SEVEN_DAYS_MS;
+            const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
+            const cutoffTime = Date.now() - THREE_DAYS_MS;
 
             try {
                 const snapshot = await requestsRef.once('value');
@@ -1788,7 +1812,7 @@ This request has been added to your Firebase database and is visible to all user
                             updates[`${id}/completedAt`] = Date.now();
                             timestampedCount++;
                         } else {
-                            // If completed more than 7 days ago, mark for deletion
+                            // If completed more than 3 days ago, mark for deletion
                             if (data.completedAt < cutoffTime) {
                                 console.log(`[Cleanup] Removing old completed request: ${data.title} (completed ${new Date(data.completedAt).toLocaleDateString()})`);
                                 updates[id] = null; // null value deletes the entry
@@ -2425,7 +2449,69 @@ This request has been added to your Firebase database and is visible to all user
                 loadNews();
             } else if (tabName === 'chat') {
                 loadChat();
+            } else if (tabName === 'map') {
+                initArcGISMap();
             }
+        }
+
+        // ========================================
+        // ARCGIS MAP
+        // ========================================
+
+        let mapView = null;
+        let mapInitialized = false;
+
+        // Initialize ArcGIS Map with dark mode
+        function initArcGISMap() {
+            if (mapInitialized) return; // Already initialized
+            mapInitialized = true;
+
+            console.log('[ArcGIS] Initializing map...');
+
+            require([
+                "esri/Map",
+                "esri/views/MapView",
+                "esri/Basemap",
+                "esri/layers/VectorTileLayer"
+            ], function(Map, MapView, Basemap, VectorTileLayer) {
+
+                // Create a dark vector tile basemap
+                const darkGrayVectorLayer = new VectorTileLayer({
+                    portalItem: {
+                        id: "1768e8efc8b64a6b9b2e92f4e4b6b5e3" // Dark Gray Canvas Vector basemap
+                    }
+                });
+
+                const darkBasemap = new Basemap({
+                    baseLayers: [darkGrayVectorLayer],
+                    title: "Dark Gray Canvas",
+                    id: "dark-gray-vector"
+                });
+
+                // Create the map with dark basemap
+                const map = new Map({
+                    basemap: "dark-gray-vector" // Using built-in dark gray basemap
+                });
+
+                // Create the map view
+                mapView = new MapView({
+                    container: "mapContainer",
+                    map: map,
+                    center: [-98.5795, 39.8283], // Center of USA
+                    zoom: 4,
+                    ui: {
+                        components: ["zoom", "compass"] // Minimal UI
+                    }
+                });
+
+                // Optional: Add view loaded handler
+                mapView.when(function() {
+                    console.log('[ArcGIS] Map loaded successfully');
+                }, function(error) {
+                    console.error('[ArcGIS] Map failed to load:', error);
+                });
+
+            });
         }
 
         // ========================================
