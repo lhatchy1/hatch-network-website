@@ -646,6 +646,31 @@
             font-size: 1.1rem;
             margin-bottom: 8px;
             color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .copy-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 3px 8px;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            font-family: 'Courier New', monospace;
+        }
+
+        .copy-btn:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+            background-color: rgba(0, 255, 65, 0.1);
+        }
+
+        .copy-btn.copied {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
         }
 
         .request-meta {
@@ -1658,7 +1683,10 @@
             const canEdit = isAdminMode || isOwner;
 
             requestDiv.innerHTML = `
-                <div class="request-title">${request.title} ${request.year ? `(${request.year})` : ''}</div>
+                <div class="request-title">
+                    <span>${request.title} ${request.year ? `(${request.year})` : ''}</span>
+                    <button class="copy-btn" onclick="copyTitleToClipboard('${request.title.replace(/'/g, "\\'")}', this)">📋 COPY</button>
+                </div>
                 <div class="request-meta">
                     TYPE: ${request.type} | REQUESTED BY: ${request.requesterName} | DATE: ${date}
                     ${request.completedAt ? ` | COMPLETED: ${completedDate}` : ''}
@@ -1686,6 +1714,31 @@
             `;
 
             return requestDiv;
+        }
+
+        // ========================================
+        // COPY TO CLIPBOARD
+        // ========================================
+
+        function copyTitleToClipboard(title, button) {
+            navigator.clipboard.writeText(title).then(() => {
+                // Change button text temporarily
+                const originalText = button.textContent;
+                button.textContent = '✓ COPIED';
+                button.classList.add('copied');
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                button.textContent = '✗ FAILED';
+                setTimeout(() => {
+                    button.textContent = '📋 COPY';
+                }, 2000);
+            });
         }
 
         // ========================================
