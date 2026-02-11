@@ -255,27 +255,47 @@
             overflow: hidden;
             background: var(--bg-secondary);
             border: 2px solid var(--border-color);
+            backface-visibility: hidden;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .flip-card-top::before,
+        .flip-card-bottom::before,
+        .flip-card-flip-top::before,
+        .flip-card-flip-bottom::before {
+            content: attr(data-value);
             font-size: 2.5rem;
             color: var(--text-primary);
-            backface-visibility: hidden;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 80px;
+            height: 80px;
         }
 
         .flip-card-top {
             top: 0;
             border-bottom: 1px solid var(--bg-primary);
-            align-items: flex-end;
             border-radius: 4px 4px 0 0;
+        }
+
+        .flip-card-top::before,
+        .flip-card-flip-top::before {
+            top: 0;
         }
 
         .flip-card-bottom {
             bottom: 0;
             border-top: 1px solid var(--bg-primary);
-            align-items: flex-start;
             border-radius: 0 0 4px 4px;
+        }
+
+        .flip-card-bottom::before,
+        .flip-card-flip-bottom::before {
+            top: -40px;
         }
 
         .flip-card-flip-top,
@@ -287,7 +307,6 @@
         .flip-card-flip-top {
             top: 0;
             border-bottom: 1px solid var(--bg-primary);
-            align-items: flex-end;
             border-radius: 4px 4px 0 0;
             transform-origin: center bottom;
         }
@@ -295,7 +314,6 @@
         .flip-card-flip-bottom {
             bottom: 0;
             border-top: 1px solid var(--bg-primary);
-            align-items: flex-start;
             border-radius: 0 0 4px 4px;
             transform-origin: center top;
         }
@@ -335,11 +353,18 @@
                 height: 60px;
             }
 
-            .flip-card-top,
-            .flip-card-bottom,
-            .flip-card-flip-top,
-            .flip-card-flip-bottom {
+            .flip-card-top::before,
+            .flip-card-bottom::before,
+            .flip-card-flip-top::before,
+            .flip-card-flip-bottom::before {
                 font-size: 1.8rem;
+                line-height: 60px;
+                height: 60px;
+            }
+
+            .flip-card-bottom::before,
+            .flip-card-flip-bottom::before {
+                top: -30px;
             }
 
             .flip-clock-divider {
@@ -1235,18 +1260,18 @@
                 <div class="flip-clock-segment">
                     <div class="flip-unit" id="flip-hour-1">
                         <div class="flip-card">
-                            <div class="flip-card-top">0</div>
-                            <div class="flip-card-bottom">0</div>
-                            <div class="flip-card-flip-top">0</div>
-                            <div class="flip-card-flip-bottom">0</div>
+                            <div class="flip-card-top" data-value="0"></div>
+                            <div class="flip-card-bottom" data-value="0"></div>
+                            <div class="flip-card-flip-top" data-value="0"></div>
+                            <div class="flip-card-flip-bottom" data-value="0"></div>
                         </div>
                     </div>
                     <div class="flip-unit" id="flip-hour-2">
                         <div class="flip-card">
-                            <div class="flip-card-top">0</div>
-                            <div class="flip-card-bottom">0</div>
-                            <div class="flip-card-flip-top">0</div>
-                            <div class="flip-card-flip-bottom">0</div>
+                            <div class="flip-card-top" data-value="0"></div>
+                            <div class="flip-card-bottom" data-value="0"></div>
+                            <div class="flip-card-flip-top" data-value="0"></div>
+                            <div class="flip-card-flip-bottom" data-value="0"></div>
                         </div>
                     </div>
                 </div>
@@ -1254,18 +1279,18 @@
                 <div class="flip-clock-segment">
                     <div class="flip-unit" id="flip-minute-1">
                         <div class="flip-card">
-                            <div class="flip-card-top">0</div>
-                            <div class="flip-card-bottom">0</div>
-                            <div class="flip-card-flip-top">0</div>
-                            <div class="flip-card-flip-bottom">0</div>
+                            <div class="flip-card-top" data-value="0"></div>
+                            <div class="flip-card-bottom" data-value="0"></div>
+                            <div class="flip-card-flip-top" data-value="0"></div>
+                            <div class="flip-card-flip-bottom" data-value="0"></div>
                         </div>
                     </div>
                     <div class="flip-unit" id="flip-minute-2">
                         <div class="flip-card">
-                            <div class="flip-card-top">0</div>
-                            <div class="flip-card-bottom">0</div>
-                            <div class="flip-card-flip-top">0</div>
-                            <div class="flip-card-flip-bottom">0</div>
+                            <div class="flip-card-top" data-value="0"></div>
+                            <div class="flip-card-bottom" data-value="0"></div>
+                            <div class="flip-card-flip-top" data-value="0"></div>
+                            <div class="flip-card-flip-bottom" data-value="0"></div>
                         </div>
                     </div>
                 </div>
@@ -1273,18 +1298,18 @@
                 <div class="flip-clock-segment">
                     <div class="flip-unit" id="flip-second-1">
                         <div class="flip-card">
-                            <div class="flip-card-top">0</div>
-                            <div class="flip-card-bottom">0</div>
-                            <div class="flip-card-flip-top">0</div>
-                            <div class="flip-card-flip-bottom">0</div>
+                            <div class="flip-card-top" data-value="0"></div>
+                            <div class="flip-card-bottom" data-value="0"></div>
+                            <div class="flip-card-flip-top" data-value="0"></div>
+                            <div class="flip-card-flip-bottom" data-value="0"></div>
                         </div>
                     </div>
                     <div class="flip-unit" id="flip-second-2">
                         <div class="flip-card">
-                            <div class="flip-card-top">0</div>
-                            <div class="flip-card-bottom">0</div>
-                            <div class="flip-card-flip-top">0</div>
-                            <div class="flip-card-flip-bottom">0</div>
+                            <div class="flip-card-top" data-value="0"></div>
+                            <div class="flip-card-bottom" data-value="0"></div>
+                            <div class="flip-card-flip-top" data-value="0"></div>
+                            <div class="flip-card-flip-bottom" data-value="0"></div>
                         </div>
                     </div>
                 </div>
@@ -3295,9 +3320,9 @@ This request has been added to your Firebase database and is visible to all user
             const flipTopElement = flipCard.querySelector('.flip-card-flip-top');
             const flipBottomElement = flipCard.querySelector('.flip-card-flip-bottom');
 
-            // Set the flip animation elements
-            flipTopElement.textContent = oldValue || '0';
-            flipBottomElement.textContent = newValue;
+            // Set the flip animation elements using data-value attribute
+            flipTopElement.setAttribute('data-value', oldValue || '0');
+            flipBottomElement.setAttribute('data-value', newValue);
 
             // Remove previous animation class if any
             flipCard.classList.remove('flipping');
@@ -3310,8 +3335,8 @@ This request has been added to your Firebase database and is visible to all user
 
             // After animation completes, update the static elements
             setTimeout(() => {
-                topElement.textContent = newValue;
-                bottomElement.textContent = newValue;
+                topElement.setAttribute('data-value', newValue);
+                bottomElement.setAttribute('data-value', newValue);
                 flipCard.classList.remove('flipping');
             }, 600);
         }
