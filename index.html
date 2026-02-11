@@ -646,6 +646,31 @@
             font-size: 1.1rem;
             margin-bottom: 8px;
             color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .copy-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 3px 8px;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            font-family: 'Courier New', monospace;
+        }
+
+        .copy-btn:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+            background-color: rgba(0, 255, 65, 0.1);
+        }
+
+        .copy-btn.copied {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
         }
 
         .request-meta {
@@ -1509,6 +1534,16 @@
         // FormSubmit Email Endpoint (replace with your email)
         const FORMSUBMIT_EMAIL = "plex@hatchnetwork.ch";
 
+        // ArcGIS Web Map Configuration
+        // To create/edit your web map:
+        // 1. Go to https://arcgis.com and sign in
+        // 2. Click "Map" to create a new web map or edit an existing one
+        // 3. Add markers, layers, popups, and style your map as desired
+        // 4. Click "Save" and then "Share" - make it public or shared with your organization
+        // 5. Get the Web Map ID from the URL (e.g., https://arcgis.com/home/webmap/viewer.html?webmap=YOUR_ID_HERE)
+        // 6. Paste the Web Map ID below - any changes you make in ArcGIS will automatically appear here!
+        const ARCGIS_WEBMAP_ID = ""; // Leave empty to use default dark basemap, or add your Web Map ID
+
         // ========================================
         // INITIALIZATION
         // ========================================
@@ -1658,7 +1693,10 @@
             const canEdit = isAdminMode || isOwner;
 
             requestDiv.innerHTML = `
-                <div class="request-title">${request.title} ${request.year ? `(${request.year})` : ''}</div>
+                <div class="request-title">
+                    <span>${request.title} ${request.year ? `(${request.year})` : ''}</span>
+                    <button class="copy-btn" onclick="copyTitleToClipboard('${request.title.replace(/'/g, "\\'")}', this)">📋 COPY</button>
+                </div>
                 <div class="request-meta">
                     TYPE: ${request.type} | REQUESTED BY: ${request.requesterName} | DATE: ${date}
                     ${request.completedAt ? ` | COMPLETED: ${completedDate}` : ''}
@@ -1686,6 +1724,31 @@
             `;
 
             return requestDiv;
+        }
+
+        // ========================================
+        // COPY TO CLIPBOARD
+        // ========================================
+
+        function copyTitleToClipboard(title, button) {
+            navigator.clipboard.writeText(title).then(() => {
+                // Change button text temporarily
+                const originalText = button.textContent;
+                button.textContent = '✓ COPIED';
+                button.classList.add('copied');
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                button.textContent = '✗ FAILED';
+                setTimeout(() => {
+                    button.textContent = '📋 COPY';
+                }, 2000);
+            });
         }
 
         // ========================================
@@ -2461,57 +2524,83 @@ This request has been added to your Firebase database and is visible to all user
         let mapView = null;
         let mapInitialized = false;
 
-        // Initialize ArcGIS Map with dark mode
+        // Initialize ArcGIS Map - can use Web Map for easy editing or default dark basemap
         function initArcGISMap() {
             if (mapInitialized) return; // Already initialized
             mapInitialized = true;
 
             console.log('[ArcGIS] Initializing map...');
 
-            require([
-                "esri/Map",
-                "esri/views/MapView",
-                "esri/Basemap",
-                "esri/layers/VectorTileLayer"
-            ], function(Map, MapView, Basemap, VectorTileLayer) {
+            // If Web Map ID is provided, load the web map (editable in ArcGIS Online)
+            // Otherwise, use default dark basemap
+            if (ARCGIS_WEBMAP_ID && ARCGIS_WEBMAP_ID.trim() !== "") {
+                require([
+                    "esri/WebMap",
+                    "esri/views/MapView"
+                ], function(WebMap, MapView) {
 
-                // Create a dark vector tile basemap
-                const darkGrayVectorLayer = new VectorTileLayer({
-                    portalItem: {
-                        id: "1768e8efc8b64a6b9b2e92f4e4b6b5e3" // Dark Gray Canvas Vector basemap
-                    }
+                    console.log('[ArcGIS] Loading Web Map ID:', ARCGIS_WEBMAP_ID);
+
+                    // Load the web map from ArcGIS Online
+                    const webMap = new WebMap({
+                        portalItem: {
+                            id: ARCGIS_WEBMAP_ID
+                        }
+                    });
+
+                    // Create the map view
+                    mapView = new MapView({
+                        container: "mapContainer",
+                        map: webMap,
+                        // Map will use the saved extent/zoom from the web map
+                        // You can override by uncommenting:
+                        // center: [-98.5795, 39.8283],
+                        // zoom: 4
+                    });
+
+                    mapView.when(function() {
+                        console.log('[ArcGIS] Web Map loaded successfully');
+                        console.log('[ArcGIS] Edit your map at: https://arcgis.com/home/webmap/viewer.html?webmap=' + ARCGIS_WEBMAP_ID);
+                    }, function(error) {
+                        console.error('[ArcGIS] Web Map failed to load:', error);
+                        console.error('[ArcGIS] Make sure the map is shared publicly or with your organization');
+                    });
+
                 });
+            } else {
+                // No Web Map ID provided - use default dark basemap
+                require([
+                    "esri/Map",
+                    "esri/views/MapView"
+                ], function(Map, MapView) {
 
-                const darkBasemap = new Basemap({
-                    baseLayers: [darkGrayVectorLayer],
-                    title: "Dark Gray Canvas",
-                    id: "dark-gray-vector"
+                    console.log('[ArcGIS] Using default dark basemap');
+
+                    // Create the map with dark basemap
+                    const map = new Map({
+                        basemap: "dark-gray-vector"
+                    });
+
+                    // Create the map view
+                    mapView = new MapView({
+                        container: "mapContainer",
+                        map: map,
+                        center: [-98.5795, 39.8283], // Center of USA
+                        zoom: 4,
+                        ui: {
+                            components: ["zoom", "compass"] // Minimal UI
+                        }
+                    });
+
+                    mapView.when(function() {
+                        console.log('[ArcGIS] Map loaded successfully');
+                        console.log('[ArcGIS] TIP: Add a Web Map ID in the configuration to enable easy editing in ArcGIS Online');
+                    }, function(error) {
+                        console.error('[ArcGIS] Map failed to load:', error);
+                    });
+
                 });
-
-                // Create the map with dark basemap
-                const map = new Map({
-                    basemap: "dark-gray-vector" // Using built-in dark gray basemap
-                });
-
-                // Create the map view
-                mapView = new MapView({
-                    container: "mapContainer",
-                    map: map,
-                    center: [-98.5795, 39.8283], // Center of USA
-                    zoom: 4,
-                    ui: {
-                        components: ["zoom", "compass"] // Minimal UI
-                    }
-                });
-
-                // Optional: Add view loaded handler
-                mapView.when(function() {
-                    console.log('[ArcGIS] Map loaded successfully');
-                }, function(error) {
-                    console.error('[ArcGIS] Map failed to load:', error);
-                });
-
-            });
+            }
         }
 
         // ========================================
