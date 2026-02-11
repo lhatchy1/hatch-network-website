@@ -3314,6 +3314,11 @@ This request has been added to your Firebase database and is visible to all user
             const element = document.getElementById(elementId);
             if (!element) return;
 
+            // Only animate if the digit actually changed
+            if (newValue === oldValue) {
+                return;
+            }
+
             const flipCard = element.querySelector('.flip-card');
             const topElement = flipCard.querySelector('.flip-card-top');
             const bottomElement = flipCard.querySelector('.flip-card-bottom');
