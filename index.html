@@ -203,6 +203,150 @@
             font-size: 0.9rem;
         }
 
+        /* Flip Clock */
+        .flip-clock {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        .flip-clock-segment {
+            display: flex;
+            gap: 4px;
+        }
+
+        .flip-clock-divider {
+            font-size: 3rem;
+            color: var(--text-primary);
+            line-height: 1;
+            padding: 0 4px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .flip-unit {
+            position: relative;
+            width: 60px;
+            height: 80px;
+            perspective: 200px;
+        }
+
+        .flip-card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .flip-card-top,
+        .flip-card-bottom,
+        .flip-card-flip-top,
+        .flip-card-flip-bottom {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            overflow: hidden;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            backface-visibility: hidden;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+        }
+
+        .flip-card-top {
+            top: 0;
+            border-bottom: 1px solid var(--bg-primary);
+            align-items: flex-end;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .flip-card-bottom {
+            bottom: 0;
+            border-top: 1px solid var(--bg-primary);
+            align-items: flex-start;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .flip-card-flip-top,
+        .flip-card-flip-bottom {
+            z-index: 2;
+            opacity: 0;
+        }
+
+        .flip-card-flip-top {
+            top: 0;
+            border-bottom: 1px solid var(--bg-primary);
+            align-items: flex-end;
+            border-radius: 4px 4px 0 0;
+            transform-origin: center bottom;
+        }
+
+        .flip-card-flip-bottom {
+            bottom: 0;
+            border-top: 1px solid var(--bg-primary);
+            align-items: flex-start;
+            border-radius: 0 0 4px 4px;
+            transform-origin: center top;
+        }
+
+        .flip-card.flipping .flip-card-flip-top {
+            opacity: 1;
+            animation: flip-top 0.6s ease-in-out;
+        }
+
+        .flip-card.flipping .flip-card-flip-bottom {
+            opacity: 1;
+            animation: flip-bottom 0.6s ease-in-out 0.3s;
+        }
+
+        @keyframes flip-top {
+            0% {
+                transform: rotateX(0deg);
+            }
+            100% {
+                transform: rotateX(-90deg);
+            }
+        }
+
+        @keyframes flip-bottom {
+            0% {
+                transform: rotateX(90deg);
+            }
+            100% {
+                transform: rotateX(0deg);
+            }
+        }
+
+        /* Responsive adjustments for flip clock */
+        @media (max-width: 768px) {
+            .flip-unit {
+                width: 45px;
+                height: 60px;
+            }
+
+            .flip-card-top,
+            .flip-card-bottom,
+            .flip-card-flip-top,
+            .flip-card-flip-bottom {
+                font-size: 1.8rem;
+            }
+
+            .flip-clock-divider {
+                font-size: 2.2rem;
+            }
+        }
+
         /* Tab Navigation */
         .tab-navigation {
             display: flex;
@@ -1085,6 +1229,67 @@
     <main class="main-content">
         <div class="header">
             <img src="logo.svg" alt="Hatch Network Logo" class="logo">
+
+            <!-- Flip Clock -->
+            <div class="flip-clock">
+                <div class="flip-clock-segment">
+                    <div class="flip-unit" id="flip-hour-1">
+                        <div class="flip-card">
+                            <div class="flip-card-top">0</div>
+                            <div class="flip-card-bottom">0</div>
+                            <div class="flip-card-flip-top">0</div>
+                            <div class="flip-card-flip-bottom">0</div>
+                        </div>
+                    </div>
+                    <div class="flip-unit" id="flip-hour-2">
+                        <div class="flip-card">
+                            <div class="flip-card-top">0</div>
+                            <div class="flip-card-bottom">0</div>
+                            <div class="flip-card-flip-top">0</div>
+                            <div class="flip-card-flip-bottom">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-clock-divider">:</div>
+                <div class="flip-clock-segment">
+                    <div class="flip-unit" id="flip-minute-1">
+                        <div class="flip-card">
+                            <div class="flip-card-top">0</div>
+                            <div class="flip-card-bottom">0</div>
+                            <div class="flip-card-flip-top">0</div>
+                            <div class="flip-card-flip-bottom">0</div>
+                        </div>
+                    </div>
+                    <div class="flip-unit" id="flip-minute-2">
+                        <div class="flip-card">
+                            <div class="flip-card-top">0</div>
+                            <div class="flip-card-bottom">0</div>
+                            <div class="flip-card-flip-top">0</div>
+                            <div class="flip-card-flip-bottom">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-clock-divider">:</div>
+                <div class="flip-clock-segment">
+                    <div class="flip-unit" id="flip-second-1">
+                        <div class="flip-card">
+                            <div class="flip-card-top">0</div>
+                            <div class="flip-card-bottom">0</div>
+                            <div class="flip-card-flip-top">0</div>
+                            <div class="flip-card-flip-bottom">0</div>
+                        </div>
+                    </div>
+                    <div class="flip-unit" id="flip-second-2">
+                        <div class="flip-card">
+                            <div class="flip-card-top">0</div>
+                            <div class="flip-card-bottom">0</div>
+                            <div class="flip-card-flip-top">0</div>
+                            <div class="flip-card-flip-bottom">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <h1>
                 HATCH NETWORK
                 <span class="weather-widget" id="weatherWidget">
@@ -1542,7 +1747,7 @@
         // 4. Click "Save" and then "Share" - make it public or shared with your organization
         // 5. Get the Web Map ID from the URL (e.g., https://arcgis.com/home/webmap/viewer.html?webmap=YOUR_ID_HERE)
         // 6. Paste the Web Map ID below - any changes you make in ArcGIS will automatically appear here!
-        const ARCGIS_WEBMAP_ID = ""; // Leave empty to use default dark basemap, or add your Web Map ID
+        const ARCGIS_WEBMAP_ID = "e2f3d2e326614db78e176e32f395a8b0"; // Web Map ID from ArcGIS
 
         // ========================================
         // INITIALIZATION
@@ -3045,6 +3250,77 @@ This request has been added to your Firebase database and is visible to all user
 
             return date.toLocaleDateString();
         }
+
+        // ========================================
+        // FLIP CLOCK FUNCTIONALITY
+        // ========================================
+
+        let previousTime = { hours: '', minutes: '', seconds: '' };
+
+        function updateFlipClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            // Update hours
+            if (hours !== previousTime.hours) {
+                flipDigit('flip-hour-1', hours[0], previousTime.hours[0]);
+                flipDigit('flip-hour-2', hours[1], previousTime.hours[1]);
+                previousTime.hours = hours;
+            }
+
+            // Update minutes
+            if (minutes !== previousTime.minutes) {
+                flipDigit('flip-minute-1', minutes[0], previousTime.minutes[0]);
+                flipDigit('flip-minute-2', minutes[1], previousTime.minutes[1]);
+                previousTime.minutes = minutes;
+            }
+
+            // Update seconds
+            if (seconds !== previousTime.seconds) {
+                flipDigit('flip-second-1', seconds[0], previousTime.seconds[0]);
+                flipDigit('flip-second-2', seconds[1], previousTime.seconds[1]);
+                previousTime.seconds = seconds;
+            }
+        }
+
+        function flipDigit(elementId, newValue, oldValue) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            const flipCard = element.querySelector('.flip-card');
+            const topElement = flipCard.querySelector('.flip-card-top');
+            const bottomElement = flipCard.querySelector('.flip-card-bottom');
+            const flipTopElement = flipCard.querySelector('.flip-card-flip-top');
+            const flipBottomElement = flipCard.querySelector('.flip-card-flip-bottom');
+
+            // Set the flip animation elements
+            flipTopElement.textContent = oldValue || '0';
+            flipBottomElement.textContent = newValue;
+
+            // Remove previous animation class if any
+            flipCard.classList.remove('flipping');
+
+            // Trigger reflow to restart animation
+            void flipCard.offsetWidth;
+
+            // Add flipping class to trigger animation
+            flipCard.classList.add('flipping');
+
+            // After animation completes, update the static elements
+            setTimeout(() => {
+                topElement.textContent = newValue;
+                bottomElement.textContent = newValue;
+                flipCard.classList.remove('flipping');
+            }, 600);
+        }
+
+        // Initialize the clock immediately
+        updateFlipClock();
+
+        // Update the clock every second
+        setInterval(updateFlipClock, 1000);
 
         // ========================================
         // INITIALIZE ON PAGE LOAD
