@@ -1163,7 +1163,34 @@
             content: '- ';
             color: var(--text-secondary);
         }
+
+        /* River Map */
+        #riverMap {
+            width: 100%;
+            height: 450px;
+            border: 2px solid var(--border-color);
+            margin-bottom: 20px;
+            z-index: 1;
+        }
+
+        #riverMap .leaflet-popup-content-wrapper {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+            border: 1px solid var(--border-color);
+            border-radius: 0;
+        }
+
+        #riverMap .leaflet-popup-tip {
+            background-color: var(--bg-secondary);
+        }
+
+        #riverMap .leaflet-popup-content {
+            font-size: 0.85rem;
+            margin: 10px 14px;
+        }
     </style>
+
 </head>
 <body>
     <!-- Main Content -->
@@ -1384,6 +1411,9 @@
                 </p>
             </div>
 
+            <!-- River Map -->
+            <div id="riverMap"></div>
+
             <!-- River Stations -->
             <div id="riverStationsContainer">
 
@@ -1413,6 +1443,64 @@
                     <div class="river-updated" id="updated-2152">Last updated: --</div>
                     <div class="river-link">
                         <a href="https://www.hydrodaten.admin.ch/en/seen-und-fluesse/stations/2152" target="_blank" rel="noopener noreferrer">&gt; View full station data on hydrodaten.admin.ch</a>
+                    </div>
+                </div>
+
+                <!-- Station 2110: Reuss - Mühlau -->
+                <div class="river-station" id="station-2110">
+                    <div class="river-station-header">
+                        <h3>REUSS - M&Uuml;HLAU, H&Uuml;NENBERG</h3>
+                        <span class="river-status status-loading" id="status-2110">LOADING...</span>
+                    </div>
+                    <div class="river-data-grid">
+                        <div class="river-data-item">
+                            <span class="label">WATER LEVEL</span>
+                            <span class="value" id="level-2110">--</span>
+                            <span class="unit">m above sea level</span>
+                        </div>
+                        <div class="river-data-item">
+                            <span class="label">FLOW RATE</span>
+                            <span class="value" id="flow-2110">--</span>
+                            <span class="unit">m&sup3;/s</span>
+                        </div>
+                        <div class="river-data-item">
+                            <span class="label">WATER TEMP</span>
+                            <span class="value" id="temp-2110">--</span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                    </div>
+                    <div class="river-updated" id="updated-2110">Last updated: --</div>
+                    <div class="river-link">
+                        <a href="https://www.hydrodaten.admin.ch/en/seen-und-fluesse/stations/2110" target="_blank" rel="noopener noreferrer">&gt; View full station data on hydrodaten.admin.ch</a>
+                    </div>
+                </div>
+
+                <!-- Station 2018: Reuss - Mellingen -->
+                <div class="river-station" id="station-2018">
+                    <div class="river-station-header">
+                        <h3>REUSS - MELLINGEN</h3>
+                        <span class="river-status status-loading" id="status-2018">LOADING...</span>
+                    </div>
+                    <div class="river-data-grid">
+                        <div class="river-data-item">
+                            <span class="label">WATER LEVEL</span>
+                            <span class="value" id="level-2018">--</span>
+                            <span class="unit">m above sea level</span>
+                        </div>
+                        <div class="river-data-item">
+                            <span class="label">FLOW RATE</span>
+                            <span class="value" id="flow-2018">--</span>
+                            <span class="unit">m&sup3;/s</span>
+                        </div>
+                        <div class="river-data-item">
+                            <span class="label">WATER TEMP</span>
+                            <span class="value" id="temp-2018">--</span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                    </div>
+                    <div class="river-updated" id="updated-2018">Last updated: --</div>
+                    <div class="river-link">
+                        <a href="https://www.hydrodaten.admin.ch/en/seen-und-fluesse/stations/2018" target="_blank" rel="noopener noreferrer">&gt; View full station data on hydrodaten.admin.ch</a>
                     </div>
                 </div>
 
@@ -1529,6 +1617,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- Leaflet.js for river map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
         // ========================================
@@ -2527,16 +2619,59 @@ This request has been added to your Firebase database and is visible to all user
         // ========================================
 
         let riverDataLoaded = false;
+        let riverMapInitialized = false;
 
         // River stations to monitor - add more station IDs here
         const riverStations = [
-            { id: '2152', name: 'Reuss - Luzern, Geissmattbrücke' }
+            { id: '2152', name: 'Reuss - Luzern, Geissmattbrücke', lat: 47.0534, lng: 8.2990 },
+            { id: '2110', name: 'Reuss - Mühlau, Hünenberg', lat: 47.1985, lng: 8.3880 },
+            { id: '2018', name: 'Reuss - Mellingen', lat: 47.4217, lng: 8.2686 }
         ];
+
+        let riverMapMarkers = {};
+
+        function initRiverMap() {
+            if (riverMapInitialized) return;
+            riverMapInitialized = true;
+
+            const map = L.map('riverMap', {
+                scrollWheelZoom: true
+            });
+
+            // Dark-themed tiles (CartoDB Dark Matter)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Custom marker icon matching the site theme
+            const stationIcon = L.divIcon({
+                className: 'river-map-marker',
+                html: '<div style="width: 14px; height: 14px; background-color: #00ff41; border: 2px solid #0a0e14; border-radius: 50%; box-shadow: 0 0 8px rgba(0, 255, 65, 0.6);"></div>',
+                iconSize: [14, 14],
+                iconAnchor: [7, 7]
+            });
+
+            // Add markers for each station
+            riverStations.forEach(station => {
+                const marker = L.marker([station.lat, station.lng], { icon: stationIcon }).addTo(map);
+                marker.bindPopup(`<strong>${station.name}</strong><br>Station ${station.id}<br><span id="map-status-${station.id}">Loading...</span>`);
+                riverMapMarkers[station.id] = marker;
+            });
+
+            // Fit map to show all stations with padding
+            const group = L.featureGroup(Object.values(riverMapMarkers));
+            map.fitBounds(group.getBounds().pad(0.15));
+
+            console.log('[Packrafting] River map initialized');
+        }
 
         async function loadRiverData() {
             if (riverDataLoaded) return;
             riverDataLoaded = true;
 
+            initRiverMap();
             console.log('[Packrafting] Loading river data...');
 
             for (const station of riverStations) {
@@ -2575,6 +2710,18 @@ This request has been added to your Firebase database and is visible to all user
                                 const date = new Date(latestTimestamp * 1000);
                                 updatedEl.textContent = `Last updated: ${date.toLocaleString()}`;
                             }
+                        }
+
+                        // Update map marker popup
+                        const marker = riverMapMarkers[station.id];
+                        if (marker) {
+                            const flowEl = document.getElementById(`flow-${station.id}`);
+                            const tempEl = document.getElementById(`temp-${station.id}`);
+                            const statusEl = document.getElementById(`status-${station.id}`);
+                            const flow = flowEl ? flowEl.textContent : '--';
+                            const temp = tempEl ? tempEl.textContent : '--';
+                            const status = statusEl ? statusEl.textContent : '';
+                            marker.setPopupContent(`<strong>${station.name}</strong><br>Flow: ${flow} m\u00B3/s | Temp: ${temp}\u00B0C<br>Status: ${status}`);
                         }
 
                         console.log(`[Packrafting] Loaded data for station ${station.id}`);
