@@ -2676,11 +2676,19 @@ This request has been added to your Firebase database and is visible to all user
 
             for (const station of riverStations) {
                 try {
+                    console.log(`[Packrafting] Fetching data for station ${station.id}...`);
                     const response = await fetch(`https://api.existenz.ch/apiv1/hydro/latest?locations=${station.id}`);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
                     const data = await response.json();
+                    console.log(`[Packrafting] Station ${station.id} response:`, data);
 
                     if (data && data.length > 0) {
                         let latestTimestamp = null;
+                        let hasData = false;
 
                         data.forEach(entry => {
                             const param = entry.parameters;
@@ -2693,14 +2701,23 @@ This request has been added to your Firebase database and is visible to all user
 
                             if (param === 'temperature' || param === 'temperatur') {
                                 const el = document.getElementById(`temp-${station.id}`);
-                                if (el) el.textContent = value.toFixed(1);
+                                if (el) {
+                                    el.textContent = value.toFixed(1);
+                                    hasData = true;
+                                }
                             } else if (param === 'abfluss' || param === 'flow') {
                                 const el = document.getElementById(`flow-${station.id}`);
-                                if (el) el.textContent = value.toFixed(1);
+                                if (el) {
+                                    el.textContent = value.toFixed(1);
+                                    hasData = true;
+                                }
                                 updateFlowStatus(station.id, value);
                             } else if (param === 'pegel' || param === 'level') {
                                 const el = document.getElementById(`level-${station.id}`);
-                                if (el) el.textContent = value.toFixed(2);
+                                if (el) {
+                                    el.textContent = value.toFixed(2);
+                                    hasData = true;
+                                }
                             }
                         });
 
@@ -2724,13 +2741,29 @@ This request has been added to your Firebase database and is visible to all user
                             marker.setPopupContent(`<strong>${station.name}</strong><br>Flow: ${flow} m\u00B3/s | Temp: ${temp}\u00B0C<br>Status: ${status}`);
                         }
 
-                        console.log(`[Packrafting] Loaded data for station ${station.id}`);
+                        if (hasData) {
+                            console.log(`[Packrafting] ✓ Loaded data for station ${station.id}`);
+                        } else {
+                            console.warn(`[Packrafting] No recognized parameters for station ${station.id}`);
+                            const statusEl = document.getElementById(`status-${station.id}`);
+                            if (statusEl) {
+                                statusEl.textContent = 'NO DATA';
+                                statusEl.className = 'river-status status-loading';
+                            }
+                        }
+                    } else {
+                        console.warn(`[Packrafting] Empty response for station ${station.id}`);
+                        const statusEl = document.getElementById(`status-${station.id}`);
+                        if (statusEl) {
+                            statusEl.textContent = 'NO DATA';
+                            statusEl.className = 'river-status status-loading';
+                        }
                     }
                 } catch (error) {
                     console.error(`[Packrafting] Error loading station ${station.id}:`, error);
                     const statusEl = document.getElementById(`status-${station.id}`);
                     if (statusEl) {
-                        statusEl.textContent = 'OFFLINE';
+                        statusEl.textContent = `ERROR: ${error.message}`;
                         statusEl.className = 'river-status status-caution';
                     }
                 }
