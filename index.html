@@ -1517,6 +1517,12 @@
                     <li>Never paddle alone - minimum group of 3 recommended</li>
                     <li>Check weather forecast for upstream areas - rain in the mountains means rising water downstream</li>
                 </ul>
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <h4>RESOURCES</h4>
+                    <ul>
+                        <li><a href="https://www.mekongpackraft.com/wp-content/uploads/2021/10/Manual-Mekong.pdf" target="_blank" rel="noopener noreferrer" style="color: var(--text-primary); text-decoration: underline;">Mekong Packraft Manual (PDF)</a> - Complete guide to packrafting techniques and safety</li>
+                    </ul>
+                </div>
             </div>
 
             <p style="color: var(--text-muted); font-size: 0.7rem; margin-top: 10px; opacity: 0.6;">
@@ -2686,11 +2692,14 @@ This request has been added to your Firebase database and is visible to all user
                     const data = await response.json();
                     console.log(`[Packrafting] Station ${station.id} response:`, data);
 
-                    if (data && data.length > 0) {
+                    // API returns {payload: [...]} not a direct array
+                    const payload = data.payload || [];
+
+                    if (payload && payload.length > 0) {
                         let latestTimestamp = null;
                         let hasData = false;
 
-                        data.forEach(entry => {
+                        payload.forEach(entry => {
                             const param = entry.parameters;
                             const value = parseFloat(entry.value);
                             const timestamp = entry.timestamp;
