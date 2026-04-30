@@ -1,0 +1,27 @@
+{
+  "rules": {
+    "requests": {
+      ".read": true,
+      "$requestId": {
+        ".write": "auth != null && (!data.exists() || data.child('userId').val() === auth.uid || auth.token.email != null)"
+      }
+    },
+    "plexStats": {
+      ".read": true,
+      ".write": false
+    },
+    "serverStatus": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email != null"
+    },
+    "chat": {
+      "messages": {
+        ".read": true,
+        "$messageId": {
+          ".write": "auth != null && (!data.exists() || data.child('userId').val() === auth.uid || auth.token.email != null)",
+          ".validate": "newData.hasChildren(['username', 'message', 'timestamp', 'userId']) && newData.child('username').isString() && newData.child('username').val().length > 0 && newData.child('username').val().length <= 20 && newData.child('message').isString() && newData.child('message').val().length > 0 && newData.child('message').val().length <= 1000 && newData.child('userId').isString() && newData.child('timestamp').isNumber() && (!newData.hasChild('editedAt') || newData.child('editedAt').isNumber())"
+        }
+      }
+    }
+  }
+}
