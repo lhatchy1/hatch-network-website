@@ -1013,6 +1013,100 @@
             box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
         }
 
+        /* Status Indicator */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 15px;
+            padding: 5px 12px;
+            border: 1px solid var(--border-color);
+            background-color: rgba(0, 255, 65, 0.05);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            vertical-align: middle;
+        }
+
+        .status-indicator .label {
+            color: var(--text-secondary);
+        }
+
+        .status-indicator .status-value {
+            color: var(--text-primary);
+            font-weight: bold;
+        }
+
+        .status-indicator .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-indicator .status-dot.online {
+            background-color: #00ff41;
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+        }
+
+        .status-indicator .status-dot.maintenance {
+            background-color: #ffaa00;
+            box-shadow: 0 0 8px rgba(255, 170, 0, 0.6);
+        }
+
+        .status-indicator .status-dot.offline {
+            background-color: #ff4444;
+            box-shadow: 0 0 8px rgba(255, 68, 68, 0.6);
+        }
+
+        .status-controls {
+            margin-top: 10px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            background-color: rgba(0, 255, 65, 0.05);
+        }
+
+        .status-controls h4 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .status-controls h4::before {
+            content: '> ';
+            color: var(--text-secondary);
+        }
+
+        .status-controls .status-btn {
+            margin: 5px 5px 5px 0;
+            padding: 8px 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .status-controls .status-btn:hover {
+            border-color: var(--text-primary);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+        }
+
+        .status-controls .status-btn.active {
+            border-color: var(--text-primary);
+            background-color: rgba(0, 255, 65, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .status-indicator {
+                display: block;
+                margin: 10px auto 0;
+                text-align: center;
+                max-width: fit-content;
+            }
+        }
+
     </style>
 
 </head>
@@ -1028,6 +1122,11 @@
                     <span class="icon">🌡️</span>
                     <span class="temp">--°C</span>
                     <span class="condition">loading...</span>
+                </span>
+                <span class="status-indicator" id="statusIndicator">
+                    <span class="label">STATUS:</span>
+                    <span class="status-dot online" id="statusDot"></span>
+                    <span class="status-value" id="statusValue">Online</span>
                 </span>
             </h1>
             <p>Welcome to the Hatch Network</p>
@@ -1072,6 +1171,14 @@
                     <span class="count" id="tvCount">--</span>
                     <span class="label">TV Shows</span>
                 </div>
+            </div>
+
+            <!-- Admin Status Controls -->
+            <div class="status-controls" id="statusControls" style="display: none; margin-bottom: 30px;">
+                <h4>SERVER STATUS CONTROL</h4>
+                <button class="status-btn" onclick="setServerStatus('Online')" id="status-btn-online">🟢 ONLINE</button>
+                <button class="status-btn" onclick="setServerStatus('Maintenance')" id="status-btn-maintenance">🟡 MAINTENANCE</button>
+                <button class="status-btn" onclick="setServerStatus('Offline')" id="status-btn-offline">🔴 OFFLINE</button>
             </div>
 
         <!-- Request Form -->
@@ -1341,6 +1448,7 @@
         const auth = firebase.auth();
         const database = firebase.database();
         const requestsRef = database.ref('requests');
+        const statusRef = database.ref('serverStatus');
 
         // Admin mode state
         let isAdminMode = false;
@@ -1380,6 +1488,9 @@
                     // Run cleanup and migration when admin signs in
                     cleanupOldCompletedRequests();
                     migrateStatusValues();
+
+                    // Show admin status controls
+                    updateStatusControlsVisibility();
                 } else {
                     // Anonymous user
                     console.log('[Auth] Signed in anonymously:', user.uid);
@@ -1399,6 +1510,9 @@
                 const badge = document.querySelector('.admin-badge');
                 if (badge) badge.remove();
 
+                // Hide admin status controls
+                updateStatusControlsVisibility();
+
                 console.log('[Auth] Signed out');
 
                 // Try to sign in anonymously again
@@ -1407,6 +1521,66 @@
                 });
             }
         });
+
+        // ========================================
+        // SERVER STATUS
+        // ========================================
+
+        // Listen for status changes
+        statusRef.on('value', (snapshot) => {
+            const status = snapshot.val() || 'Online'; // Default to Online
+            updateStatusDisplay(status);
+        });
+
+        function updateStatusDisplay(status) {
+            const statusDot = document.getElementById('statusDot');
+            const statusValue = document.getElementById('statusValue');
+
+            // Update display
+            statusValue.textContent = status;
+
+            // Update dot color
+            statusDot.className = 'status-dot';
+            if (status === 'Online') {
+                statusDot.classList.add('online');
+            } else if (status === 'Maintenance') {
+                statusDot.classList.add('maintenance');
+            } else if (status === 'Offline') {
+                statusDot.classList.add('offline');
+            }
+
+            // Update active button in admin controls if they exist
+            if (isAdminMode) {
+                document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
+                const activeBtn = document.getElementById(`status-btn-${status.toLowerCase()}`);
+                if (activeBtn) activeBtn.classList.add('active');
+            }
+
+            console.log('[Status] Updated to:', status);
+        }
+
+        async function setServerStatus(status) {
+            if (!isAdminMode) {
+                alert('PERMISSION DENIED: Admin access required');
+                return;
+            }
+
+            try {
+                await statusRef.set(status);
+                console.log('[Admin] Server status changed to:', status);
+            } catch (error) {
+                console.error('[Admin] Error setting status:', error);
+                alert(`ERROR: ${error.message}`);
+            }
+        }
+
+        // Show/hide admin status controls based on admin mode
+        function updateStatusControlsVisibility() {
+            const statusControls = document.getElementById('statusControls');
+            if (statusControls) {
+                statusControls.style.display = isAdminMode ? 'block' : 'none';
+            }
+        }
 
         // ========================================
         // LOAD AND DISPLAY REQUESTS
