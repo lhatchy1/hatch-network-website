@@ -91,6 +91,10 @@ To secure your database and allow users to edit their own requests, update your 
       ".read": true,
       ".write": false
     },
+    "serverStatus": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email != null"
+    },
     "chat": {
       "messages": {
         ".read": true,
@@ -129,6 +133,10 @@ To secure your database and allow users to edit their own requests, update your 
 **Plex Stats:**
 - ✅ **Anyone can READ** stats (public viewing)
 - ✅ **Only service account can WRITE** stats (via Python script)
+
+**Server Status:**
+- ✅ **Anyone can READ** status (public viewing)
+- ✅ **Only admin users (with email) can WRITE** status
 
 **Chat Messages:**
 - ✅ **Anyone can READ** messages (public chat room)
