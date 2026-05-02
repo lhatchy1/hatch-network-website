@@ -94,28 +94,6 @@ To secure your database and allow users to edit their own requests, update your 
     "serverStatus": {
       ".read": true,
       ".write": "auth != null && auth.token.email != null"
-    },
-    "chat": {
-      "messages": {
-        ".read": true,
-        "$messageId": {
-          ".write": "auth != null && (
-            !data.exists() ||
-            data.child('userId').val() === auth.uid ||
-            auth.token.email != null
-          )",
-          ".validate": "newData.hasChildren(['username', 'message', 'timestamp', 'userId']) &&
-                        newData.child('username').isString() &&
-                        newData.child('username').val().length > 0 &&
-                        newData.child('username').val().length <= 20 &&
-                        newData.child('message').isString() &&
-                        newData.child('message').val().length > 0 &&
-                        newData.child('message').val().length <= 1000 &&
-                        newData.child('userId').isString() &&
-                        newData.child('timestamp').isNumber() &&
-                        (!newData.hasChild('editedAt') || newData.child('editedAt').isNumber())"
-        }
-      }
     }
   }
 }
@@ -138,30 +116,21 @@ To secure your database and allow users to edit their own requests, update your 
 - ✅ **Anyone can READ** status (public viewing)
 - ✅ **Only admin users (with email) can WRITE** status
 
-**Chat Messages:**
-- ✅ **Anyone can READ** messages (public chat room)
-- ✅ **Authenticated users can CREATE** messages (including anonymous users)
-- ✅ **Users can EDIT/DELETE their own** messages (userId matches auth.uid)
-- ✅ **Admin users (with email) can modify/delete ANY** message
-- ✅ **Data validation** ensures messages have username, message text, timestamp, and userId
-- ✅ **Edited messages** get an editedAt timestamp when modified
-
 ### How it works:
 
 **Regular Users (Anonymous):**
 - Automatically signed in when they visit the site
-- Can submit requests and chat messages
+- Can submit requests
 - Can edit their own requests (title, year, notes)
-- Can edit their own chat messages (edited messages show "(edited)" badge)
-- Can delete their own requests and messages only
+- Can delete their own requests only
 - Cannot change status of requests
 - User ID persists in browser (until they clear data)
 
 **Admin Users (Email/Password):**
 - Sign in via ADMIN MODE button
 - Can modify/delete ANY request
-- Can modify/delete ANY chat message
 - Can change status (New → Searching → Downloading → Completed → Backlog)
+- Can change server status indicator
 - Full administrative control
 
 4. Click **Publish** to apply the rules
