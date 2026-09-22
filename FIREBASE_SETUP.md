@@ -95,6 +95,10 @@ To secure your database and allow users to edit their own requests, update your 
       ".read": true,
       ".write": false
     },
+    "upcomingMovies": {
+      ".read": true,
+      ".write": false
+    },
     "serverStatus": {
       ".read": true,
       ".write": "auth != null && auth.token.email != null"
@@ -116,8 +120,8 @@ To secure your database and allow users to edit their own requests, update your 
 - ✅ **Anyone can READ** stats (public viewing)
 - ✅ **Only service account can WRITE** stats (via Python script)
 
-**Upcoming Seasons:**
-- ✅ **Anyone can READ** upcoming seasons (public viewing)
+**Upcoming Seasons and Films:**
+- ✅ **Anyone can READ** the `upcoming` and `upcomingMovies` feeds (public viewing)
 - ✅ **Only service account can WRITE** them (via `update_upcoming.py`)
 
 **Server Status:**
