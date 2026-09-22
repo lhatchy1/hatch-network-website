@@ -8,10 +8,10 @@
       </rect>
     </clipPath>
   </defs>
-  <text x="8" y="38" font-family="'SF Mono', Monaco, 'Cascadia Code', 'Fira Code', 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace" font-size="30" fill="#7f7f7f">&gt;</text>
+  <text x="8" y="38" font-family="'SF Mono', Monaco, 'Cascadia Code', 'Fira Code', 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace" font-size="30" fill="#629d80">&gt;</text>
   <g clip-path="url(#reveal)" font-family="'SF Mono', Monaco, 'Cascadia Code', 'Fira Code', 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace" font-size="30" font-weight="700">
     <text x="36" y="38" fill="#00ff41" textLength="90" lengthAdjust="spacing">HATCH</text>
-    <text x="144" y="38" fill="#e8e8e8" textLength="126" lengthAdjust="spacing">NETWORK</text>
+    <text x="144" y="38" fill="#d6f2e0" textLength="126" lengthAdjust="spacing">NETWORK</text>
   </g>
   <rect x="40" y="14" width="16" height="30" fill="#00ff41">
     <animate attributeName="x" calcMode="discrete" fill="freeze" dur="1.3s" begin="0.4s"
