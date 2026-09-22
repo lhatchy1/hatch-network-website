@@ -29,12 +29,12 @@
             --text-dim: #888888;
             --text-muted: #838383;
             --text-faint: #7f7f7f;
-            --accent: #ffffff;
+            --accent: #00ff41;
 
             /* Semantic colour - used for meaning only, never decoration */
             --error: #ff4444;
             --warning: #ffaa00;
-            --success: #44ff88;
+            --success: #00ff41;
             --info: #3b82f6;
             --complete: #a855f7;
 
@@ -57,6 +57,10 @@
             flex-direction: column;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
+        }
+
+        ::selection {
+            background-color: rgba(0, 255, 65, 0.25);
         }
 
         /* Main Content */
@@ -113,7 +117,7 @@
         .sidebar a:hover {
             color: var(--accent);
             background-color: var(--surface-hover);
-            border-color: var(--border-strong);
+            border-color: var(--accent);
         }
 
         .sidebar-note {
@@ -228,7 +232,7 @@
         }
 
         .plex-stat-item .count {
-            color: var(--text-primary);
+            color: var(--accent);
             font-weight: 600;
             font-size: 16px;
         }
@@ -320,7 +324,7 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--text-primary);
+            color: var(--accent);
             padding: 7px 12px;
             background-color: var(--overlay-subtle);
             border-bottom: 1px solid var(--border-color);
@@ -329,7 +333,7 @@
 
         .request-form h2:hover,
         .request-list h2[id]:hover {
-            color: var(--accent);
+            color: var(--text-primary);
         }
 
         #formContent,
@@ -394,7 +398,7 @@
         .modal-content select:focus,
         .modal-content textarea:focus {
             outline: none;
-            border-color: var(--border-strong);
+            border-color: var(--accent);
             background-color: var(--surface-hover);
         }
 
@@ -414,7 +418,7 @@
         /* Buttons */
         .btn {
             background-color: var(--overlay-light);
-            color: var(--text-primary);
+            color: var(--accent);
             border: 1px solid var(--border-strong);
             border-radius: 3px;
             padding: 8px 16px;
@@ -662,7 +666,7 @@
         }
 
         .success-message {
-            background-color: rgba(68, 255, 136, 0.1);
+            background-color: rgba(0, 255, 65, 0.1);
             border: 1px solid var(--success);
             color: var(--success);
         }
@@ -788,9 +792,9 @@
         }
 
         .status-controls .status-btn.active {
-            background-color: var(--overlay-medium);
-            color: var(--text-primary);
-            border-color: var(--border-strong);
+            background-color: rgba(0, 255, 65, 0.1);
+            color: var(--accent);
+            border-color: var(--accent);
         }
 
         /* Modals */
