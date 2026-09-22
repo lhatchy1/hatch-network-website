@@ -12,34 +12,58 @@
         }
 
         :root {
-            --bg-primary: #0a0e14;
-            --bg-secondary: #151a21;
-            --bg-tertiary: #1f2833;
-            --text-primary: #00ff41;
-            --text-secondary: #33ff66;
-            --text-muted: #66ff88;
-            --border-color: #00ff41;
-            --accent: #00ff41;
+            /* Surfaces */
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #141414;
+            --surface-hover: #1e1e1e;
+
+            /* Borders */
+            --border-color: #2a2a2a;
+            --border-subtle: #1a1a1a;
+            --border-strong: #444444;
+
+            /* Text */
+            --text-primary: #e8e8e8;
+            --text-secondary: #cccccc;
+            --text-dim: #888888;
+            --text-muted: #838383;
+            --text-faint: #7f7f7f;
+            --accent: #ffffff;
+
+            /* Semantic colour - used for meaning only, never decoration */
             --error: #ff4444;
             --warning: #ffaa00;
-            --complete: #00ffff;
+            --success: #44ff88;
+            --info: #3b82f6;
+            --complete: #a855f7;
+
+            /* Overlays */
+            --overlay-subtle: rgba(255, 255, 255, 0.03);
+            --overlay-light: rgba(255, 255, 255, 0.05);
+            --overlay-medium: rgba(255, 255, 255, 0.1);
+
+            --font-mono: 'SF Mono', 'Monaco', 'Cascadia Code', 'Fira Code',
+                         'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace;
         }
 
         body {
-            font-family: 'Courier New', Courier, monospace;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            line-height: 1.5;
             background-color: var(--bg-primary);
             color: var(--text-primary);
-            line-height: 1.6;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* Main Content */
         .main-content {
             flex: 1;
-            padding: 30px;
-            max-width: 1200px;
+            padding: 16px;
+            max-width: 900px;
             margin: 0 auto;
             width: 100%;
         }
@@ -48,22 +72,20 @@
         .sidebar {
             width: 100%;
             background-color: var(--bg-secondary);
-            border-top: 2px solid var(--border-color);
-            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            padding: 14px 16px;
             text-align: center;
             margin-top: auto;
         }
 
         .sidebar h2 {
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            color: var(--text-secondary);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
             display: inline-block;
-            margin-right: 15px;
-        }
-
-        .sidebar h2::before {
-            content: '$ ';
+            margin-right: 12px;
         }
 
         .sidebar ul {
@@ -74,309 +96,199 @@
 
         .sidebar li {
             display: inline-block;
-            margin: 0 10px;
+            margin: 0 4px;
         }
 
         .sidebar a {
-            color: var(--text-muted);
+            color: var(--text-secondary);
             text-decoration: none;
-            transition: all 0.2s;
-            padding: 8px 20px;
+            transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+            padding: 5px 12px;
             border: 1px solid var(--border-color);
+            border-radius: 3px;
             display: inline-block;
+            font-size: 11px;
         }
 
         .sidebar a:hover {
-            color: var(--text-primary);
-            background-color: rgba(0, 255, 65, 0.1);
-            border-color: var(--text-primary);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+            color: var(--accent);
+            background-color: var(--surface-hover);
+            border-color: var(--border-strong);
         }
 
-        .sidebar a::before {
-            content: '→ ';
-            margin-right: 5px;
+        .sidebar-note {
+            color: var(--text-faint);
+            font-size: 10px;
+            margin-top: 12px;
+            max-width: 620px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
+        /* Header */
         .header {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 18px;
             text-align: center;
         }
 
         .header .logo {
-            max-width: 400px;
+            max-width: 220px;
             width: 100%;
             height: auto;
-            margin: 0 auto 20px;
+            margin: 0 auto 14px;
             display: block;
         }
 
-        /* Weather Widget */
-        .weather-widget {
-            display: inline-flex;
+        .header h1 {
+            font-size: 12px;
+            font-weight: 400;
+            display: flex;
+            justify-content: center;
             align-items: center;
             gap: 8px;
-            margin-left: 15px;
-            padding: 5px 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Header chips - weather and server status */
+        .weather-widget,
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
             border: 1px solid var(--border-color);
-            background-color: rgba(0, 255, 65, 0.05);
-            font-size: 0.75rem;
-            color: var(--text-muted);
+            border-radius: 3px;
+            background-color: var(--overlay-subtle);
+            font-size: 10px;
+            color: var(--text-secondary);
             vertical-align: middle;
         }
 
-        .weather-widget .label {
-            color: var(--text-secondary);
+        .weather-widget .label,
+        .status-indicator .label {
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .weather-widget .temp {
+        .weather-widget .temp,
+        .status-indicator .status-value {
             color: var(--text-primary);
-            font-weight: bold;
+            font-weight: 600;
         }
 
         .weather-widget .icon {
-            font-size: 1rem;
+            font-size: 11px;
         }
 
-        @media (max-width: 768px) {
-            .weather-widget {
-                display: block;
-                margin: 10px auto 0;
-                text-align: center;
-                max-width: fit-content;
-            }
+        .status-indicator .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
         }
 
-        /* Plex Stats Widget */
+        .status-indicator .status-dot.online {
+            background-color: var(--success);
+        }
+
+        .status-indicator .status-dot.maintenance {
+            background-color: var(--warning);
+        }
+
+        .status-indicator .status-dot.offline {
+            background-color: var(--error);
+        }
+
+        /* Plex Stats Strip */
         .plex-stats {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-top: 15px;
-            padding: 10px;
+            gap: 1px;
+            background-color: var(--border-subtle);
             border: 1px solid var(--border-color);
-            background-color: rgba(0, 255, 65, 0.05);
-            font-size: 0.85rem;
+            border-radius: 3px;
+            overflow: hidden;
         }
 
         .plex-stat-item {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
+            flex: 1;
+            padding: 10px 14px;
+            background-color: var(--bg-tertiary);
         }
 
         .plex-stat-item .icon {
-            font-size: 1.2rem;
+            font-size: 13px;
+            opacity: 0.7;
         }
 
         .plex-stat-item .count {
             color: var(--text-primary);
-            font-weight: bold;
-            font-size: 1rem;
+            font-weight: 600;
+            font-size: 16px;
         }
 
         .plex-stat-item .label {
-            color: var(--text-secondary);
-        }
-
-        @media (max-width: 768px) {
-            .plex-stats {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-
-        .header h1 {
-            font-size: 1.8rem;
-        }
-
-        .header p {
-            color: var(--text-muted);
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-
-        /* Request Form */
-        .request-form {
-            background-color: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            padding: 25px;
-            margin-bottom: 40px;
-        }
-
-        .request-form h2 {
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-            transition: color 0.2s;
-        }
-
-        .request-form h2:hover {
-            color: var(--text-secondary);
-        }
-
-        .request-form h2::before {
-            content: '>> ';
-        }
-
-        #formContent {
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-        }
-
-        .form-group label::before {
-            content: '> ';
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.95rem;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--text-primary);
-            box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .btn {
-            background-color: transparent;
-            color: var(--text-primary);
-            border: 2px solid var(--border-color);
-            padding: 12px 30px;
-            cursor: pointer;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .btn:hover {
-            background-color: var(--accent);
-            color: var(--bg-primary);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
-        }
-
-        .btn:active {
-            transform: translateY(2px);
-        }
-
-        /* Request List */
-        .request-list {
-            background-color: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            padding: 25px;
-        }
-
-        .request-list h2 {
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-        }
-
-        .request-list h2::before {
-            content: '>> ';
+            color: var(--text-dim);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Tab Navigation */
         .tab-navigation {
             display: flex;
-            justify-content: center;
-            gap: 0;
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--border-color);
+            gap: 2px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .tab-btn {
-            background-color: var(--bg-secondary);
-            color: var(--text-muted);
-            border: 2px solid var(--border-color);
-            border-bottom: none;
-            padding: 12px 30px;
+            background: none;
+            color: var(--text-dim);
+            border: none;
+            border-bottom: 1px solid transparent;
+            padding: 8px 14px;
             cursor: pointer;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.95rem;
-            transition: all 0.3s;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.15s, border-color 0.15s, background-color 0.15s;
             position: relative;
-            margin: 0 -1px;
+            margin-bottom: -1px;
         }
 
         .tab-btn:hover {
-            color: var(--text-primary);
-            background-color: rgba(0, 255, 65, 0.05);
+            color: var(--text-secondary);
+            background-color: var(--overlay-subtle);
         }
 
         .tab-btn.active {
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            border-bottom: 2px solid var(--bg-primary);
-            margin-bottom: -2px;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
-        }
-
-        .tab-btn::before {
-            content: '[ ';
-            color: var(--text-secondary);
-        }
-
-        .tab-btn::after {
-            content: ' ]';
-            color: var(--text-secondary);
+            color: var(--accent);
+            border-bottom-color: var(--accent);
         }
 
         .tab-notification {
             position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 8px;
-            height: 8px;
-            background-color: var(--text-primary);
+            top: 6px;
+            right: 4px;
+            width: 5px;
+            height: 5px;
+            background-color: var(--success);
             border-radius: 50%;
-            box-shadow: 0 0 8px rgba(0, 255, 65, 0.8);
             animation: pulse-notification 2s infinite;
         }
 
         @keyframes pulse-notification {
-            0%, 100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.6;
-                transform: scale(1.2);
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
 
         .tab-content {
@@ -385,172 +297,211 @@
 
         .tab-content.active {
             display: block;
-            animation: fadeIn 0.3s ease-in-out;
+            animation: fadeIn 0.2s ease-out;
         }
 
-        @media (max-width: 768px) {
-            .tab-navigation {
-                flex-direction: column;
-                gap: 0;
-            }
-
-            .tab-btn {
-                border-bottom: 1px solid var(--border-color);
-                margin: 0;
-            }
-
-            .tab-btn.active {
-                border-bottom: 1px solid var(--border-color);
-                margin-bottom: 0;
-            }
-
-            .tab-btn:last-child {
-                border-bottom: 2px solid var(--border-color);
-            }
-
-            .tab-btn.active:last-child {
-                border-bottom: 2px solid var(--bg-primary);
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        /* Upcoming Seasons */
-        .upcoming-item {
+        /* Panels - the shared card shell for forms and lists */
+        .request-form,
+        .request-list {
             background-color: var(--bg-tertiary);
-            border-left: 3px solid var(--border-color);
-            padding: 15px;
-            margin-bottom: 15px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: baseline;
-            gap: 15px;
-            flex-wrap: wrap;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            margin-bottom: 12px;
         }
 
-        .upcoming-item:hover {
-            border-left-color: var(--text-primary);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
-        }
-
-        .upcoming-item.imminent {
-            border-left-color: var(--complete);
-        }
-
-        .upcoming-date {
-            color: var(--complete);
-            font-size: 0.9rem;
-            white-space: nowrap;
-            min-width: 105px;
-        }
-
-        .upcoming-title {
-            font-size: 1.1rem;
+        .request-form h2,
+        .request-list h2 {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             color: var(--text-primary);
-            flex: 1;
-            min-width: 180px;
+            padding: 7px 12px;
+            background-color: var(--overlay-subtle);
+            border-bottom: 1px solid var(--border-color);
+            transition: color 0.15s;
         }
 
-        .upcoming-season {
-            display: inline-block;
-            padding: 3px 10px;
-            border: 1px solid var(--text-secondary);
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            white-space: nowrap;
+        .request-form h2:hover,
+        .request-list h2[id]:hover {
+            color: var(--accent);
         }
 
-        .upcoming-countdown {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            white-space: nowrap;
+        #formContent,
+        #backlogContent {
+            padding: 12px;
+            animation: fadeIn 0.2s ease-out;
         }
 
-        .upcoming-meta {
-            flex-basis: 100%;
-            color: var(--text-muted);
-            font-size: 0.85rem;
+        .request-list > #requestContainer,
+        .request-list > #upcomingContainer {
+            padding: 12px;
         }
 
-        .upcoming-updated {
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            font-style: italic;
-            text-align: right;
-            margin-top: 15px;
-            opacity: 0.7;
+        .panel-note {
+            color: var(--text-faint);
+            font-size: 10px;
+            line-height: 1.5;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-subtle);
         }
 
-        @media (max-width: 768px) {
-            .upcoming-item {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .upcoming-season {
-                align-self: flex-start;
-            }
+        #formContent .panel-note,
+        #backlogContent .panel-note {
+            padding: 0 0 8px;
+            border-bottom: none;
         }
 
+        /* Forms */
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--text-dim);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea,
+        .modal-content input,
+        .modal-content select,
+        .modal-content textarea {
+            width: 100%;
+            padding: 7px 9px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 12px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus,
+        .modal-content input:focus,
+        .modal-content select:focus,
+        .modal-content textarea:focus {
+            outline: none;
+            border-color: var(--border-strong);
+            background-color: var(--surface-hover);
+        }
+
+        .form-group textarea,
+        .modal-content textarea {
+            resize: vertical;
+            min-height: 64px;
+        }
+
+        .form-error {
+            color: var(--error);
+            font-size: 10px;
+            margin-top: 6px;
+            display: none;
+        }
+
+        /* Buttons */
+        .btn {
+            background-color: var(--overlay-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-strong);
+            border-radius: 3px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+        }
+
+        .btn:hover {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        .btn:active {
+            opacity: 0.8;
+        }
+
+        /* Request rows */
         .request-item {
-            background-color: var(--bg-tertiary);
-            border-left: 3px solid var(--border-color);
-            padding: 15px;
-            margin-bottom: 15px;
-            transition: all 0.2s;
+            padding: 8px 0;
+            border-top: 1px solid var(--border-subtle);
+            transition: background-color 0.15s;
         }
 
-        .request-item:hover {
-            border-left-color: var(--text-primary);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+        .request-item:first-child {
+            border-top: none;
         }
 
         .request-title {
-            font-size: 1.1rem;
-            margin-bottom: 8px;
+            font-size: 12px;
+            margin-bottom: 3px;
             color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .copy-btn {
             background: none;
             border: 1px solid var(--border-color);
-            color: var(--text-secondary);
+            border-radius: 3px;
+            color: var(--text-dim);
             cursor: pointer;
-            padding: 3px 8px;
-            font-size: 0.75rem;
-            transition: all 0.2s;
-            font-family: 'Courier New', monospace;
+            padding: 1px 6px;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: color 0.15s, border-color 0.15s;
+            font-family: var(--font-mono);
         }
 
         .copy-btn:hover {
-            border-color: var(--text-primary);
+            border-color: var(--border-strong);
             color: var(--text-primary);
-            background-color: rgba(0, 255, 65, 0.1);
         }
 
         .copy-btn.copied {
-            border-color: var(--text-primary);
-            color: var(--text-primary);
+            border-color: var(--success);
+            color: var(--success);
         }
 
         .request-meta {
-            font-size: 0.85rem;
+            font-size: 10px;
             color: var(--text-muted);
-            margin-bottom: 5px;
+            margin-bottom: 2px;
         }
 
         .request-status {
             display: inline-block;
-            padding: 3px 10px;
+            padding: 1px 7px;
             border: 1px solid;
-            font-size: 0.8rem;
-            margin-top: 8px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 5px;
         }
 
         .status-new {
-            color: #4488ff;
-            border-color: #4488ff;
+            color: var(--info);
+            border-color: var(--info);
         }
 
         .status-searching {
@@ -559,226 +510,290 @@
         }
 
         .status-downloading {
-            color: var(--text-secondary);
-            border-color: var(--text-secondary);
+            color: var(--success);
+            border-color: var(--success);
         }
 
         .status-completed {
-            color: #aa44ff;
-            border-color: #aa44ff;
+            color: var(--complete);
+            border-color: var(--complete);
         }
 
         .status-backlog {
-            color: #888888;
-            border-color: #888888;
+            color: var(--text-faint);
+            border-color: var(--text-faint);
         }
 
         .admin-note {
-            color: #ff4444;
-            font-size: 0.85rem;
-            margin-top: 8px;
-            padding: 8px;
-            border-left: 2px solid #ff4444;
+            color: var(--error);
+            font-size: 10px;
+            margin-top: 6px;
+            padding: 6px 8px;
+            border-left: 2px solid var(--error);
             background-color: rgba(255, 68, 68, 0.05);
         }
 
         .admin-note strong {
-            color: #ff6666;
+            color: var(--error);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .no-requests {
-            color: var(--text-muted);
-            font-style: italic;
+            color: var(--text-faint);
             text-align: center;
-            padding: 30px;
+            padding: 20px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .loading {
             text-align: center;
-            padding: 30px;
-            color: var(--text-secondary);
+            padding: 20px;
+            color: var(--text-dim);
+            font-size: 11px;
+            letter-spacing: 1px;
         }
 
         .loading::before {
-            content: '...LOADING';
+            content: 'LOADING';
             animation: blink 1s infinite;
         }
 
         @keyframes blink {
             0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
+            51%, 100% { opacity: 0.25; }
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 20px;
-            }
+        /* Upcoming Seasons */
+        .upcoming-item {
+            padding: 8px 0 8px 10px;
+            border-top: 1px solid var(--border-subtle);
+            border-left: 2px solid transparent;
+            transition: background-color 0.15s;
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
 
-            .sidebar h2 {
-                display: block;
-                margin-bottom: 10px;
-            }
+        .upcoming-item:first-child {
+            border-top: none;
+        }
 
-            .sidebar li {
-                display: block;
-                margin: 10px 0;
-            }
+        .upcoming-item:hover {
+            background-color: var(--overlay-subtle);
+        }
 
-            .sidebar a {
-                display: block;
-                width: 100%;
-            }
+        .upcoming-item.imminent {
+            border-left-color: var(--warning);
+        }
+
+        .upcoming-date {
+            color: var(--text-dim);
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            min-width: 84px;
+        }
+
+        .upcoming-title {
+            font-size: 12px;
+            color: var(--text-primary);
+            flex: 1;
+            min-width: 160px;
+        }
+
+        .upcoming-season {
+            display: inline-block;
+            padding: 1px 7px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            color: var(--text-secondary);
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .upcoming-countdown {
+            color: var(--text-muted);
+            font-size: 10px;
+            white-space: nowrap;
+            min-width: 76px;
+            text-align: right;
+        }
+
+        .upcoming-item.imminent .upcoming-countdown {
+            color: var(--warning);
+        }
+
+        .upcoming-meta {
+            flex-basis: 100%;
+            color: var(--text-faint);
+            font-size: 10px;
+        }
+
+        .upcoming-updated {
+            color: var(--text-faint);
+            font-size: 9px;
+            text-align: right;
+            padding: 0 12px 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Messages */
+        .error-message,
+        .success-message {
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            display: none;
+            font-size: 11px;
+            border-radius: 3px;
         }
 
         .error-message {
             background-color: rgba(255, 68, 68, 0.1);
             border: 1px solid var(--error);
             color: var(--error);
-            padding: 15px;
-            margin-bottom: 20px;
-            display: none;
         }
 
         .success-message {
-            background-color: rgba(0, 255, 65, 0.1);
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            padding: 15px;
-            margin-bottom: 20px;
-            display: none;
+            background-color: rgba(68, 255, 136, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
         }
 
-        /* Admin Mode Styles */
+        /* Admin Mode */
         .admin-toggle {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 10px 20px;
+            bottom: 14px;
+            right: 14px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            color: var(--text-dim);
+            padding: 6px 12px;
             cursor: pointer;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9rem;
-            transition: all 0.3s;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.15s, color 0.15s, border-color 0.15s;
             z-index: 1000;
         }
 
         .admin-toggle:hover {
-            background-color: #ff4444;
-            color: var(--bg-primary);
-            box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+            color: var(--text-primary);
+            border-color: var(--border-strong);
         }
 
         .admin-toggle.active {
-            background-color: #ff4444;
+            background-color: var(--error);
             color: var(--bg-primary);
-            border-color: #ff4444;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(255, 68, 68, 0.5); }
-            50% { box-shadow: 0 0 20px rgba(255, 68, 68, 0.8); }
+            border-color: var(--error);
         }
 
         .admin-controls {
             display: none;
-            margin-top: 10px;
-            padding: 10px;
-            background-color: rgba(255, 68, 68, 0.05);
-            border-top: 1px solid #ff4444;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-subtle);
         }
 
         .admin-controls.active {
             display: flex;
-            gap: 10px;
+            gap: 5px;
             flex-wrap: wrap;
         }
 
-        .admin-btn {
-            background-color: transparent;
+        .admin-btn,
+        .status-controls .status-btn,
+        .toggle-controls-btn {
+            background: none;
             border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 5px 15px;
+            border-radius: 3px;
+            color: var(--text-dim);
+            padding: 3px 9px;
             cursor: pointer;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.8rem;
-            transition: all 0.2s;
+            font-family: var(--font-mono);
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: background-color 0.15s, color 0.15s, border-color 0.15s;
         }
 
-        .admin-btn:hover {
-            background-color: rgba(255, 68, 68, 0.2);
-            border-color: #ff4444;
+        .admin-btn:hover,
+        .status-controls .status-btn:hover,
+        .toggle-controls-btn:hover {
+            background-color: var(--overlay-light);
+            color: var(--text-primary);
+            border-color: var(--border-strong);
         }
 
-        .admin-btn.status-new {
-            border-color: #4488ff;
-            color: #4488ff;
-        }
-
-        .admin-btn.status-searching {
-            border-color: var(--warning);
-            color: var(--warning);
-        }
-
-        .admin-btn.status-downloading {
-            border-color: var(--text-secondary);
-            color: var(--text-secondary);
-        }
-
-        .admin-btn.status-completed {
-            border-color: #aa44ff;
-            color: #aa44ff;
-        }
-
-        .admin-btn.status-backlog {
-            border-color: #888888;
-            color: #888888;
-        }
-
-        .admin-btn.add-note {
-            border-color: #ff4444;
-            color: #ff4444;
-        }
-
-        .admin-btn.delete {
-            border-color: var(--error);
-            color: var(--error);
-        }
+        .admin-btn.status-new { color: var(--info); border-color: var(--info); }
+        .admin-btn.status-searching { color: var(--warning); border-color: var(--warning); }
+        .admin-btn.status-downloading { color: var(--success); border-color: var(--success); }
+        .admin-btn.status-completed { color: var(--complete); border-color: var(--complete); }
+        .admin-btn.status-backlog { color: var(--text-faint); border-color: var(--text-faint); }
+        .admin-btn.add-note { color: var(--text-secondary); border-color: var(--border-strong); }
+        .admin-btn.delete { color: var(--error); border-color: var(--error); }
 
         .admin-btn.delete:hover {
-            background-color: rgba(255, 68, 68, 0.2);
+            background-color: rgba(255, 68, 68, 0.15);
+            color: var(--error);
+            border-color: var(--error);
         }
 
         .admin-badge {
             display: inline-block;
-            background-color: #ff4444;
+            background-color: var(--error);
             color: var(--bg-primary);
-            padding: 2px 8px;
-            font-size: 0.7rem;
-            margin-left: 10px;
-            animation: blink 1s infinite;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
         }
 
         .toggle-controls-btn {
-            background-color: transparent;
+            margin-top: 6px;
+        }
+
+        /* Server status controls */
+        .status-controls {
+            padding: 10px 12px;
             border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            padding: 3px 10px;
-            cursor: pointer;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.75rem;
-            margin-top: 8px;
-            transition: all 0.2s;
+            border-radius: 3px;
+            background-color: var(--bg-tertiary);
         }
 
-        .toggle-controls-btn:hover {
-            border-color: var(--text-primary);
+        .status-controls h4 {
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-controls .status-btn {
+            margin: 0 4px 0 0;
+        }
+
+        .status-controls .status-btn.active {
+            background-color: var(--overlay-medium);
             color: var(--text-primary);
+            border-color: var(--border-strong);
         }
 
+        /* Modals */
         .modal {
             display: none;
             position: fixed;
@@ -786,10 +801,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
+            background-color: rgba(0, 0, 0, 0.8);
             z-index: 2000;
             justify-content: center;
             align-items: center;
+            padding: 16px;
         }
 
         .modal.active {
@@ -797,174 +813,108 @@
         }
 
         .modal-content {
-            background-color: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            padding: 30px;
-            max-width: 400px;
-            width: 90%;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 16px;
+            max-width: 380px;
+            width: 100%;
         }
 
         .modal-content h2 {
-            margin-bottom: 20px;
+            margin-bottom: 14px;
             color: var(--text-primary);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .modal-content h2::before {
-            content: '# ';
+        .modal-content label {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--text-dim);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .modal-content input {
-            width: 100%;
-            padding: 10px;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 16px;
-            margin-bottom: 20px;
+        .modal-note {
+            color: var(--text-faint);
+            font-size: 10px;
+            margin-bottom: 12px;
         }
 
-        .modal-content input:focus {
-            outline: none;
-            border-color: var(--text-primary);
-            box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
+        .modal-content input,
+        .modal-content select,
+        .modal-content textarea {
+            margin-bottom: 12px;
         }
 
         .modal-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .modal-buttons button {
             flex: 1;
         }
 
-        .modal-content textarea {
-            width: 100%;
-            padding: 10px;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 16px;
-            resize: vertical;
-            min-height: 80px;
-            margin-bottom: 20px;
-        }
-
-        .modal-content textarea:focus {
-            outline: none;
-            border-color: var(--text-primary);
-            box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
-        }
-
-        .modal-content select {
-            width: 100%;
-            padding: 10px;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            font-family: 'Courier New', Courier, monospace;
-            margin-bottom: 20px;
-        }
-
-        .modal-content select:focus {
-            outline: none;
-            border-color: var(--text-primary);
-            box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
-        }
-
-        /* Status Indicator */
-        .status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-left: 15px;
-            padding: 5px 12px;
-            border: 1px solid var(--border-color);
-            background-color: rgba(0, 255, 65, 0.05);
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            vertical-align: middle;
-        }
-
-        .status-indicator .label {
-            color: var(--text-secondary);
-        }
-
-        .status-indicator .status-value {
-            color: var(--text-primary);
-            font-weight: bold;
-        }
-
-        .status-indicator .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .status-indicator .status-dot.online {
-            background-color: #00ff41;
-            box-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
-        }
-
-        .status-indicator .status-dot.maintenance {
-            background-color: #ffaa00;
-            box-shadow: 0 0 8px rgba(255, 170, 0, 0.6);
-        }
-
-        .status-indicator .status-dot.offline {
-            background-color: #ff4444;
-            box-shadow: 0 0 8px rgba(255, 68, 68, 0.6);
-        }
-
-        .status-controls {
-            margin-top: 10px;
-            padding: 15px;
-            border: 1px solid var(--border-color);
-            background-color: rgba(0, 255, 65, 0.05);
-        }
-
-        .status-controls h4 {
-            color: var(--text-primary);
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
-
-        .status-controls h4::before {
-            content: '> ';
-            color: var(--text-secondary);
-        }
-
-        .status-controls .status-btn {
-            margin: 5px 5px 5px 0;
-            padding: 8px 15px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.85rem;
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 2px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .status-controls .status-btn:hover {
-            border-color: var(--text-primary);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
-        }
-
-        .status-controls .status-btn.active {
-            border-color: var(--text-primary);
-            background-color: rgba(0, 255, 65, 0.1);
-        }
-
+        /* Responsive */
         @media (max-width: 768px) {
-            .status-indicator {
+            body {
+                font-size: 13px;
+            }
+
+            .main-content {
+                padding: 12px;
+            }
+
+            /* 16px stops iOS zooming the page when a field is focused */
+            .form-group input,
+            .form-group select,
+            .form-group textarea,
+            .modal-content input,
+            .modal-content select,
+            .modal-content textarea {
+                font-size: 16px;
+            }
+
+            .plex-stats {
+                flex-direction: column;
+            }
+
+            .tab-navigation {
+                gap: 0;
+            }
+
+            .tab-btn {
+                flex: 1;
+                padding: 9px 6px;
+            }
+
+            .upcoming-item {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .upcoming-countdown {
+                text-align: left;
+            }
+
+            .sidebar h2 {
                 display: block;
-                margin: 10px auto 0;
-                text-align: center;
-                max-width: fit-content;
+                margin: 0 0 8px;
+            }
+
+            .sidebar li {
+                display: block;
+                margin: 6px 0;
+            }
+
+            .sidebar a {
+                display: block;
+                width: 100%;
             }
         }
 
@@ -1008,14 +958,8 @@
         <!-- Plex Tab Content -->
         <div id="plex-tab" class="tab-content active">
 
-        <div style="margin-bottom: 20px;">
-            <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 15px;">
-                <span style="color: var(--text-secondary);"># </span>PLEX REQUESTS
-            </h2>
-        </div>
-
             <!-- Plex Library Stats -->
-            <div class="plex-stats" id="plexStats" style="margin-bottom: 30px;">
+            <div class="plex-stats" id="plexStats" style="margin-bottom: 12px;">
                 <div class="plex-stat-item">
                     <span class="icon">🎬</span>
                     <span class="count" id="movieCount">--</span>
@@ -1029,7 +973,7 @@
             </div>
 
             <!-- Admin Status Controls -->
-            <div class="status-controls" id="statusControls" style="display: none; margin-bottom: 30px;">
+            <div class="status-controls" id="statusControls" style="display: none; margin-bottom: 12px;">
                 <h4>SERVER STATUS CONTROL</h4>
                 <button class="status-btn" onclick="setServerStatus('Online')" id="status-btn-online">🟢 ONLINE</button>
                 <button class="status-btn" onclick="setServerStatus('Maintenance')" id="status-btn-maintenance">🟡 MAINTENANCE</button>
@@ -1042,10 +986,10 @@
                 SUBMIT NEW REQUEST <span id="formToggleIcon">[+]</span>
             </h2>
             <div id="formContent" style="display: none;">
-                <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 8px; font-style: italic;">
+                <p class="panel-note">
                     🙁 Regrettably, anime requests are not welcome.
                 </p>
-                <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 15px; font-style: italic;">
+                <p class="panel-note">
                     💡 Please check if your request is already available on Plex before submitting.
                 </p>
                 <form id="requestForm">
@@ -1086,7 +1030,7 @@
         <!-- Request List -->
         <section class="request-list">
             <h2>REQUEST QUEUE</h2>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px; font-style: italic;">
+            <p class="panel-note">
                 Note: Completed requests are automatically removed after 3 days. You can edit or delete your own requests at any time.
             </p>
             <div id="requestContainer">
@@ -1095,12 +1039,12 @@
         </section>
 
         <!-- Backlog Queue -->
-        <section class="request-list" style="margin-top: 20px;">
-            <h2 id="backlogToggle" style="cursor: pointer; user-select: none; transition: color 0.2s;">
+        <section class="request-list">
+            <h2 id="backlogToggle" style="cursor: pointer; user-select: none; ">
                 BACKLOG QUEUE <span id="backlogToggleIcon">[+]</span>
             </h2>
             <div id="backlogContent" style="display: none;">
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px; font-style: italic;">
+                <p class="panel-note">
                     Requests that are on hold or difficult to find.
                 </p>
                 <div id="backlogContainer">
@@ -1115,15 +1059,9 @@
         <!-- Upcoming Tab Content -->
         <div id="upcoming-tab" class="tab-content">
 
-            <div style="margin-bottom: 20px;">
-                <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 15px;">
-                    <span style="color: var(--text-secondary);"># </span>RETURNING SEASONS
-                </h2>
-            </div>
-
             <section class="request-list">
                 <h2>COMING SOON TO SHOWS ON THE SERVER</h2>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px; font-style: italic;">
+                <p class="panel-note">
                     New seasons announced for TV shows already in the Plex library. Scanned automatically from the server &mdash; air dates can shift.
                 </p>
                 <div id="upcomingContainer">
@@ -1143,7 +1081,7 @@
         <ul>
             <li><a href="ts3server://ts.hatchnetwork.ch?port=9987">ts.hatchnetwork.ch</a></li>
         </ul>
-        <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 20px; font-style: italic; opacity: 0.7;">
+        <p class="sidebar-note">
             ⚠ Note: Your ability to edit your requests is tied to this browser. Clearing browser data will prevent you from managing your own content.
         </p>
     </footer>
@@ -1155,10 +1093,10 @@
     <div class="modal" id="passwordModal">
         <div class="modal-content">
             <h2>ADMIN AUTHENTICATION</h2>
-            <p style="color: var(--text-muted); margin-bottom: 15px;">Sign in with your admin account:</p>
-            <input type="email" id="adminEmail" placeholder="Email" style="margin-bottom: 10px;">
+            <p class="modal-note">Sign in with your admin account:</p>
+            <input type="email" id="adminEmail" placeholder="Email">
             <input type="password" id="adminPassword" placeholder="Password">
-            <div id="authError" style="color: var(--error); font-size: 0.85rem; margin-top: 10px; display: none;"></div>
+            <div id="authError" class="form-error"></div>
             <div class="modal-buttons">
                 <button class="btn" onclick="signInAdmin()">LOGIN</button>
                 <button class="btn" onclick="closePasswordModal()">CANCEL</button>
@@ -1170,20 +1108,20 @@
     <div class="modal" id="editModal">
         <div class="modal-content">
             <h2>EDIT REQUEST</h2>
-            <p style="color: var(--text-muted); margin-bottom: 15px;">Update your request details:</p>
+            <p class="modal-note">Update your request details:</p>
             <input type="hidden" id="editRequestId">
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">TYPE</label>
+            <label>TYPE</label>
             <select id="editMediaType">
                 <option value="TV Show">TV Show</option>
                 <option value="Movie">Movie</option>
             </select>
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">TITLE</label>
+            <label>TITLE</label>
             <input type="text" id="editMediaTitle" placeholder="Title">
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">YEAR (OPTIONAL)</label>
+            <label>YEAR (OPTIONAL)</label>
             <input type="text" id="editMediaYear" placeholder="Year">
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">NOTES (OPTIONAL)</label>
+            <label>NOTES (OPTIONAL)</label>
             <textarea id="editMediaNotes" placeholder="Additional notes"></textarea>
-            <div id="editError" style="color: var(--error); font-size: 0.85rem; margin-bottom: 15px; display: none;"></div>
+            <div id="editError" class="form-error"></div>
             <div class="modal-buttons">
                 <button class="btn" onclick="saveEditRequest()">SAVE</button>
                 <button class="btn" onclick="closeEditModal()">CANCEL</button>
@@ -1195,11 +1133,11 @@
     <div class="modal" id="adminNoteModal">
         <div class="modal-content">
             <h2>ADD ADMIN NOTE</h2>
-            <p style="color: var(--text-muted); margin-bottom: 15px;">Add a note visible to all users:</p>
+            <p class="modal-note">Add a note visible to all users:</p>
             <input type="hidden" id="adminNoteRequestId">
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">ADMIN NOTE</label>
-            <textarea id="adminNoteText" placeholder="Enter your note here..." style="min-height: 100px;"></textarea>
-            <div id="adminNoteError" style="color: var(--error); font-size: 0.85rem; margin-bottom: 15px; display: none;"></div>
+            <label>ADMIN NOTE</label>
+            <textarea id="adminNoteText" placeholder="Enter your note here..."></textarea>
+            <div id="adminNoteError" class="form-error"></div>
             <div class="modal-buttons">
                 <button class="btn" onclick="saveAdminNote()">SAVE</button>
                 <button class="btn" onclick="closeAdminNoteModal()">CANCEL</button>
@@ -2351,14 +2289,6 @@ This request has been added to your Firebase database and is visible to all user
                 backlogContent.style.display = 'none';
                 toggleIcon.textContent = '[+]';
             }
-        });
-
-        // Add hover effect to backlog toggle
-        document.getElementById('backlogToggle').addEventListener('mouseenter', function() {
-            this.style.color = 'var(--text-secondary)';
-        });
-        document.getElementById('backlogToggle').addEventListener('mouseleave', function() {
-            this.style.color = '';
         });
 
         function toggleControls(controlsId) {
