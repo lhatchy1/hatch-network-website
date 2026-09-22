@@ -310,6 +310,186 @@
             content: '>> ';
         }
 
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab-btn {
+            background-color: var(--bg-secondary);
+            color: var(--text-muted);
+            border: 2px solid var(--border-color);
+            border-bottom: none;
+            padding: 12px 30px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            position: relative;
+            margin: 0 -1px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background-color: rgba(0, 255, 65, 0.05);
+        }
+
+        .tab-btn.active {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--bg-primary);
+            margin-bottom: -2px;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+        }
+
+        .tab-btn::before {
+            content: '[ ';
+            color: var(--text-secondary);
+        }
+
+        .tab-btn::after {
+            content: ' ]';
+            color: var(--text-secondary);
+        }
+
+        .tab-notification {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background-color: var(--text-primary);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.8);
+            animation: pulse-notification 2s infinite;
+        }
+
+        @keyframes pulse-notification {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(1.2);
+            }
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            .tab-navigation {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .tab-btn {
+                border-bottom: 1px solid var(--border-color);
+                margin: 0;
+            }
+
+            .tab-btn.active {
+                border-bottom: 1px solid var(--border-color);
+                margin-bottom: 0;
+            }
+
+            .tab-btn:last-child {
+                border-bottom: 2px solid var(--border-color);
+            }
+
+            .tab-btn.active:last-child {
+                border-bottom: 2px solid var(--bg-primary);
+            }
+        }
+
+        /* Upcoming Seasons */
+        .upcoming-item {
+            background-color: var(--bg-tertiary);
+            border-left: 3px solid var(--border-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .upcoming-item:hover {
+            border-left-color: var(--text-primary);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+        }
+
+        .upcoming-item.imminent {
+            border-left-color: var(--complete);
+        }
+
+        .upcoming-date {
+            color: var(--complete);
+            font-size: 0.9rem;
+            white-space: nowrap;
+            min-width: 105px;
+        }
+
+        .upcoming-title {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .upcoming-season {
+            display: inline-block;
+            padding: 3px 10px;
+            border: 1px solid var(--text-secondary);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .upcoming-countdown {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .upcoming-meta {
+            flex-basis: 100%;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .upcoming-updated {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-style: italic;
+            text-align: right;
+            margin-top: 15px;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .upcoming-item {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .upcoming-season {
+                align-self: flex-start;
+            }
+        }
+
         .request-item {
             background-color: var(--bg-tertiary);
             border-left: 3px solid var(--border-color);
@@ -814,6 +994,20 @@
         <div class="error-message" id="errorMessage"></div>
         <div class="success-message" id="successMessage"></div>
 
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('plex')" id="tab-btn-plex">
+                PLEX REQUESTS
+            </button>
+            <button class="tab-btn" onclick="switchTab('upcoming')" id="tab-btn-upcoming">
+                UPCOMING
+                <span class="tab-notification" id="notification-upcoming" style="display: none;"></span>
+            </button>
+        </nav>
+
+        <!-- Plex Tab Content -->
+        <div id="plex-tab" class="tab-content active">
+
         <div style="margin-bottom: 20px;">
             <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 15px;">
                 <span style="color: var(--text-secondary);"># </span>PLEX REQUESTS
@@ -914,6 +1108,32 @@
                 </div>
             </div>
         </section>
+
+        </div>
+        <!-- End Plex Tab Content -->
+
+        <!-- Upcoming Tab Content -->
+        <div id="upcoming-tab" class="tab-content">
+
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 15px;">
+                    <span style="color: var(--text-secondary);"># </span>RETURNING SEASONS
+                </h2>
+            </div>
+
+            <section class="request-list">
+                <h2>COMING SOON TO SHOWS ON THE SERVER</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px; font-style: italic;">
+                    New seasons announced for TV shows already in the Plex library. Scanned automatically from the server &mdash; air dates can shift.
+                </p>
+                <div id="upcomingContainer">
+                    <div class="loading"></div>
+                </div>
+                <div class="upcoming-updated" id="upcomingUpdated"></div>
+            </section>
+
+        </div>
+        <!-- End Upcoming Tab Content -->
 
     </main>
 
@@ -1919,6 +2139,188 @@ This request has been added to your Firebase database and is visible to all user
 
         // Load stats on page load
         loadPlexStats();
+
+        // ========================================
+        // TAB SWITCHING & NOTIFICATIONS
+        // ========================================
+
+        // Track last visit times for each tab
+        function getLastVisit(tabName) {
+            const key = `lastVisit_${tabName}`;
+            const timestamp = localStorage.getItem(key);
+            return timestamp ? parseInt(timestamp) : 0;
+        }
+
+        function updateLastVisit(tabName) {
+            const key = `lastVisit_${tabName}`;
+            localStorage.setItem(key, Date.now().toString());
+        }
+
+        function showNotification(tabName) {
+            const notification = document.getElementById(`notification-${tabName}`);
+            if (notification) {
+                notification.style.display = 'block';
+            }
+        }
+
+        function hideNotification(tabName) {
+            const notification = document.getElementById(`notification-${tabName}`);
+            if (notification) {
+                notification.style.display = 'none';
+            }
+        }
+
+        function switchTab(tabName) {
+            // Hide all tab content
+            const allTabs = document.querySelectorAll('.tab-content');
+            allTabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all buttons
+            const allButtons = document.querySelectorAll('.tab-btn');
+            allButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab content
+            const selectedTab = document.getElementById(tabName + '-tab');
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+
+            // Highlight selected button
+            const selectedButton = document.getElementById(`tab-btn-${tabName}`);
+            if (selectedButton) {
+                selectedButton.classList.add('active');
+            }
+
+            // Clear notification and update last visit time
+            hideNotification(tabName);
+            updateLastVisit(tabName);
+
+            console.log(`[Tabs] Switched to ${tabName} tab`);
+        }
+
+        // ========================================
+        // UPCOMING SEASONS
+        // ========================================
+
+        const MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+                             'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : String(text);
+            return div.innerHTML;
+        }
+
+        // Parse a YYYY-MM-DD air date into a local-midnight Date (avoids UTC drift)
+        function parseAirDate(airDate) {
+            if (typeof airDate !== 'string') return null;
+            const parts = airDate.split('-');
+            if (parts.length !== 3) return null;
+            const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            return isNaN(date.getTime()) ? null : date;
+        }
+
+        function formatAirDate(date) {
+            return `${String(date.getDate()).padStart(2, '0')} ${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`;
+        }
+
+        function daysUntil(date) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return Math.round((date - today) / 86400000);
+        }
+
+        function formatCountdown(days) {
+            if (days === 0) return 'TODAY';
+            if (days === 1) return 'TOMORROW';
+            if (days < 7) return `in ${days} days`;
+            if (days < 61) {
+                const weeks = Math.round(days / 7);
+                return `in ${weeks} week${weeks === 1 ? '' : 's'}`;
+            }
+            const months = Math.round(days / 30);
+            return `in ${months} month${months === 1 ? '' : 's'}`;
+        }
+
+        function createUpcomingElement(show) {
+            const date = parseAirDate(show.airDate);
+            const days = daysUntil(date);
+
+            const item = document.createElement('div');
+            item.className = days <= 7 ? 'upcoming-item imminent' : 'upcoming-item';
+
+            const meta = [];
+            if (show.network) meta.push(escapeHtml(show.network));
+            if (show.seasonsOnServer) {
+                meta.push(`${show.seasonsOnServer} season${show.seasonsOnServer === 1 ? '' : 's'} on the server`);
+            }
+            if (show.episodeTitle) meta.push(`"${escapeHtml(show.episodeTitle)}"`);
+
+            item.innerHTML = `
+                <span class="upcoming-date">[${formatAirDate(date)}]</span>
+                <span class="upcoming-title">${escapeHtml(show.title)}</span>
+                <span class="upcoming-season">SEASON ${escapeHtml(show.season)}</span>
+                <span class="upcoming-countdown">${formatCountdown(days)}</span>
+                ${meta.length ? `<div class="upcoming-meta">${meta.join(' &middot; ')}</div>` : ''}
+            `;
+
+            return item;
+        }
+
+        function loadUpcoming() {
+            const container = document.getElementById('upcomingContainer');
+            const updatedEl = document.getElementById('upcomingUpdated');
+
+            database.ref('upcoming').on('value', (snapshot) => {
+                const data = snapshot.val();
+                container.innerHTML = '';
+                updatedEl.textContent = '';
+
+                if (!data || !data.shows) {
+                    container.innerHTML =
+                        '<div class="no-requests">NO UPCOMING SEASONS FOUND. THE SERVER SCAN MAY NOT HAVE RUN YET.</div>';
+                    return;
+                }
+
+                // Firebase stores arrays as objects when keys are sparse, so normalise
+                const shows = Array.isArray(data.shows) ? data.shows : Object.values(data.shows);
+
+                // Drop anything that has already aired, in case the scan is stale
+                const upcoming = shows
+                    .filter(show => show && parseAirDate(show.airDate) && daysUntil(parseAirDate(show.airDate)) >= 0)
+                    .sort((a, b) => a.airDate.localeCompare(b.airDate));
+
+                if (upcoming.length === 0) {
+                    container.innerHTML =
+                        '<div class="no-requests">NO NEW SEASONS ANNOUNCED RIGHT NOW. CHECK BACK LATER.</div>';
+                } else {
+                    upcoming.forEach(show => container.appendChild(createUpcomingElement(show)));
+                }
+
+                if (data.updatedAt) {
+                    updatedEl.textContent = `Last scanned: ${new Date(data.updatedAt).toLocaleString('en-GB')}`;
+                }
+
+                // Pulse the tab if the list changed since this browser last looked
+                const isActive = document.getElementById('upcoming-tab').classList.contains('active');
+                if (data.changedAt && data.changedAt > getLastVisit('upcoming') && upcoming.length > 0 && !isActive) {
+                    showNotification('upcoming');
+                }
+
+                console.log(`[Upcoming] Loaded ${upcoming.length} returning season(s)`);
+            }, (error) => {
+                console.error('[Upcoming] Error loading data:', error);
+                container.innerHTML =
+                    '<div class="no-requests">ERROR LOADING UPCOMING SEASONS.</div>';
+            });
+        }
+
+        // Load upcoming seasons on page load so the notification pip is accurate
+        loadUpcoming();
 
         // ========================================
         // COLLAPSIBLE FORM TOGGLE

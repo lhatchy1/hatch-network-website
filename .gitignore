@@ -11,9 +11,13 @@ venv/
 env/
 ENV/
 
+# TVmaze lookup cache (regenerated on each scan)
+tvmaze_cache.json
+
 # Logs
 *.log
 plex-stats.log
+upcoming-seasons.log
 
 # OS
 .DS_Store
