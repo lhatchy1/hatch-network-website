@@ -343,7 +343,8 @@
         }
 
         .request-list > #requestContainer,
-        .request-list > #upcomingContainer {
+        .request-list > #upcomingContainer,
+        .request-list > #upcomingMoviesContainer {
             padding: 12px;
         }
 
@@ -568,6 +569,65 @@
         @keyframes blink {
             0%, 50% { opacity: 1; }
             51%, 100% { opacity: 0.25; }
+        }
+
+        /* Sub-tabs inside a tab */
+        .sub-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .sub-tab-btn {
+            background: none;
+            color: var(--text-dim);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            padding: 4px 12px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+        }
+
+        .sub-tab-btn:hover {
+            color: var(--text-secondary);
+            border-color: var(--border-strong);
+        }
+
+        .sub-tab-btn.active {
+            color: var(--accent);
+            border-color: var(--accent);
+            background-color: var(--overlay-light);
+        }
+
+        .sub-tab-btn .tab-notification {
+            top: -3px;
+            right: -3px;
+        }
+
+        .upcoming-panel {
+            display: none;
+        }
+
+        .upcoming-panel.active {
+            display: block;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .upcoming-link {
+            color: inherit;
+            text-decoration: none;
+            border-bottom: 1px solid var(--border-strong);
+        }
+
+        .upcoming-link:hover {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
         }
 
         /* Upcoming Seasons */
@@ -1063,16 +1123,42 @@
         <!-- Upcoming Tab Content -->
         <div id="upcoming-tab" class="tab-content">
 
-            <section class="request-list">
-                <h2>COMING SOON TO SHOWS ON THE SERVER</h2>
-                <p class="panel-note">
-                    New seasons announced for TV shows already in the Plex library. Scanned automatically from the server &mdash; air dates can shift.
-                </p>
-                <div id="upcomingContainer">
-                    <div class="loading"></div>
-                </div>
-                <div class="upcoming-updated" id="upcomingUpdated"></div>
-            </section>
+            <nav class="sub-tabs">
+                <button class="sub-tab-btn active" onclick="switchUpcomingView('tv')" id="sub-tab-btn-tv">
+                    TV SHOWS
+                    <span class="tab-notification" id="notification-tv" style="display: none;"></span>
+                </button>
+                <button class="sub-tab-btn" onclick="switchUpcomingView('movies')" id="sub-tab-btn-movies">
+                    MOVIES
+                    <span class="tab-notification" id="notification-movies" style="display: none;"></span>
+                </button>
+            </nav>
+
+            <div id="upcoming-tv-panel" class="upcoming-panel active">
+                <section class="request-list">
+                    <h2>COMING SOON TO SHOWS ON THE SERVER</h2>
+                    <p class="panel-note">
+                        New seasons announced for TV shows already in the Plex library. Scanned automatically from the server &mdash; air dates can shift.
+                    </p>
+                    <div id="upcomingContainer">
+                        <div class="loading"></div>
+                    </div>
+                    <div class="upcoming-updated" id="upcomingUpdated"></div>
+                </section>
+            </div>
+
+            <div id="upcoming-movies-panel" class="upcoming-panel">
+                <section class="request-list">
+                    <h2>UPCOMING FILM RELEASES</h2>
+                    <p class="panel-note">
+                        Cinema and digital releases on the way, by popularity. Scanned automatically from the server &mdash; dates can shift.
+                    </p>
+                    <div id="upcomingMoviesContainer">
+                        <div class="loading"></div>
+                    </div>
+                    <div class="upcoming-updated" id="upcomingMoviesUpdated"></div>
+                </section>
+            </div>
 
         </div>
         <!-- End Upcoming Tab Content -->
@@ -2141,11 +2227,18 @@ This request has been added to your Firebase database and is visible to all user
             hideNotification(tabName);
             updateLastVisit(tabName);
 
+            // The UPCOMING tab has its own sub-views and pips
+            if (tabName === 'upcoming') {
+                switchUpcomingView(currentUpcomingView);
+            } else {
+                refreshUpcomingPips();
+            }
+
             console.log(`[Tabs] Switched to ${tabName} tab`);
         }
 
         // ========================================
-        // UPCOMING SEASONS
+        // UPCOMING - TV SEASONS & FILMS
         // ========================================
 
         const MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
@@ -2157,7 +2250,7 @@ This request has been added to your Firebase database and is visible to all user
             return div.innerHTML;
         }
 
-        // Parse a YYYY-MM-DD air date into a local-midnight Date (avoids UTC drift)
+        // Parse a YYYY-MM-DD date into a local-midnight Date (avoids UTC drift)
         function parseAirDate(airDate) {
             if (typeof airDate !== 'string') return null;
             const parts = airDate.split('-');
@@ -2188,6 +2281,52 @@ This request has been added to your Firebase database and is visible to all user
             return `in ${months} month${months === 1 ? '' : 's'}`;
         }
 
+        // ---- Sub-views (TV SHOWS / MOVIES) and their notification pips ----
+
+        const UPCOMING_VIEWS = ['tv', 'movies'];
+        let currentUpcomingView = 'tv';
+        try {
+            const stored = localStorage.getItem('upcomingView');
+            if (UPCOMING_VIEWS.includes(stored)) currentUpcomingView = stored;
+        } catch (e) { /* storage unavailable - default is fine */ }
+
+        // changedAt of each feed, or 0 when it has nothing to show
+        const upcomingChangedAt = { tv: 0, movies: 0 };
+
+        function switchUpcomingView(view) {
+            if (!UPCOMING_VIEWS.includes(view)) view = 'tv';
+            currentUpcomingView = view;
+            try { localStorage.setItem('upcomingView', view); } catch (e) { /* ignore */ }
+
+            UPCOMING_VIEWS.forEach(v => {
+                document.getElementById(`upcoming-${v}-panel`).classList.toggle('active', v === view);
+                document.getElementById(`sub-tab-btn-${v}`).classList.toggle('active', v === view);
+            });
+
+            // Looking at a view counts as having seen what's new in it
+            if (document.getElementById('upcoming-tab').classList.contains('active')) {
+                updateLastVisit(`upcoming-${view}`);
+            }
+            refreshUpcomingPips();
+        }
+
+        function refreshUpcomingPips() {
+            const mainActive = document.getElementById('upcoming-tab').classList.contains('active');
+            let anyUnseen = false;
+
+            UPCOMING_VIEWS.forEach(v => {
+                const unseen = upcomingChangedAt[v] > getLastVisit(`upcoming-${v}`);
+                const onScreen = mainActive && v === currentUpcomingView;
+                document.getElementById(`notification-${v}`).style.display = unseen && !onScreen ? 'block' : 'none';
+                if (unseen) anyUnseen = true;
+            });
+
+            // The main tab's pip rolls up both feeds, and only shows while you're elsewhere
+            document.getElementById('notification-upcoming').style.display = anyUnseen && !mainActive ? 'block' : 'none';
+        }
+
+        // ---- Row renderers ----
+
         function createUpcomingElement(show) {
             const date = parseAirDate(show.airDate);
             const days = daysUntil(date);
@@ -2213,56 +2352,112 @@ This request has been added to your Firebase database and is visible to all user
             return item;
         }
 
-        function loadUpcoming() {
-            const container = document.getElementById('upcomingContainer');
-            const updatedEl = document.getElementById('upcomingUpdated');
+        function createMovieElement(movie) {
+            const date = parseAirDate(movie.releaseDate);
+            const days = daysUntil(date);
+            const isDigital = movie.releaseType === 'digital';
 
-            database.ref('upcoming').on('value', (snapshot) => {
+            const item = document.createElement('div');
+            item.className = days <= 7 ? 'upcoming-item imminent' : 'upcoming-item';
+
+            const meta = [];
+            if (Array.isArray(movie.genres) && movie.genres.length) {
+                meta.push(movie.genres.map(escapeHtml).join(', '));
+            }
+            // Mention the other release date when both cinema and digital are known
+            const otherDate = parseAirDate(isDigital ? movie.cinemaDate : movie.digitalDate);
+            if (otherDate) meta.push(`${isDigital ? 'Cinema' : 'Digital'} ${formatAirDate(otherDate)}`);
+
+            const tmdbId = Number(movie.tmdbId);
+            const title = Number.isInteger(tmdbId) && tmdbId > 0
+                ? `<a class="upcoming-link" href="https://www.themoviedb.org/movie/${tmdbId}" target="_blank" rel="noopener">${escapeHtml(movie.title)}</a>`
+                : escapeHtml(movie.title);
+
+            item.innerHTML = `
+                <span class="upcoming-date">[${formatAirDate(date)}]</span>
+                <span class="upcoming-title">${title}</span>
+                <span class="upcoming-season">${isDigital ? 'DIGITAL' : 'CINEMA'}</span>
+                <span class="upcoming-countdown">${formatCountdown(days)}</span>
+                ${meta.length ? `<div class="upcoming-meta">${meta.join(' &middot; ')}</div>` : ''}
+            `;
+
+            return item;
+        }
+
+        // ---- Feed loader shared by both views ----
+
+        function loadUpcomingFeed(feed) {
+            const container = document.getElementById(feed.containerId);
+            const updatedEl = document.getElementById(feed.updatedId);
+
+            database.ref(feed.node).on('value', (snapshot) => {
                 const data = snapshot.val();
                 container.innerHTML = '';
                 updatedEl.textContent = '';
 
-                if (!data || !data.shows) {
-                    container.innerHTML =
-                        '<div class="no-requests">NO UPCOMING SEASONS FOUND. THE SERVER SCAN MAY NOT HAVE RUN YET.</div>';
+                if (!data || !data[feed.listKey]) {
+                    container.innerHTML = `<div class="no-requests">${feed.emptyNoScan}</div>`;
+                    upcomingChangedAt[feed.view] = 0;
+                    refreshUpcomingPips();
                     return;
                 }
 
                 // Firebase stores arrays as objects when keys are sparse, so normalise
-                const shows = Array.isArray(data.shows) ? data.shows : Object.values(data.shows);
+                const raw = Array.isArray(data[feed.listKey]) ? data[feed.listKey] : Object.values(data[feed.listKey]);
 
-                // Drop anything that has already aired, in case the scan is stale
-                const upcoming = shows
-                    .filter(show => show && parseAirDate(show.airDate) && daysUntil(parseAirDate(show.airDate)) >= 0)
-                    .sort((a, b) => a.airDate.localeCompare(b.airDate));
+                // Drop anything already past, in case the scan is stale
+                const items = raw
+                    .filter(item => item && parseAirDate(item[feed.dateKey]) && daysUntil(parseAirDate(item[feed.dateKey])) >= 0)
+                    .sort((a, b) => a[feed.dateKey].localeCompare(b[feed.dateKey]));
 
-                if (upcoming.length === 0) {
-                    container.innerHTML =
-                        '<div class="no-requests">NO NEW SEASONS ANNOUNCED RIGHT NOW. CHECK BACK LATER.</div>';
+                if (items.length === 0) {
+                    container.innerHTML = `<div class="no-requests">${feed.emptyNone}</div>`;
                 } else {
-                    upcoming.forEach(show => container.appendChild(createUpcomingElement(show)));
+                    items.forEach(item => container.appendChild(feed.render(item)));
                 }
 
                 if (data.updatedAt) {
                     updatedEl.textContent = `Last scanned: ${new Date(data.updatedAt).toLocaleString('en-GB')}`;
                 }
 
-                // Pulse the tab if the list changed since this browser last looked
-                const isActive = document.getElementById('upcoming-tab').classList.contains('active');
-                if (data.changedAt && data.changedAt > getLastVisit('upcoming') && upcoming.length > 0 && !isActive) {
-                    showNotification('upcoming');
-                }
+                upcomingChangedAt[feed.view] = items.length && data.changedAt ? data.changedAt : 0;
+                refreshUpcomingPips();
 
-                console.log(`[Upcoming] Loaded ${upcoming.length} returning season(s)`);
+                console.log(`[Upcoming] Loaded ${items.length} ${feed.label}`);
             }, (error) => {
-                console.error('[Upcoming] Error loading data:', error);
-                container.innerHTML =
-                    '<div class="no-requests">ERROR LOADING UPCOMING SEASONS.</div>';
+                console.error(`[Upcoming] Error loading ${feed.label}:`, error);
+                container.innerHTML = `<div class="no-requests">ERROR LOADING ${feed.label.toUpperCase()}.</div>`;
             });
         }
 
-        // Load upcoming seasons on page load so the notification pip is accurate
-        loadUpcoming();
+        loadUpcomingFeed({
+            view: 'tv',
+            node: 'upcoming',
+            listKey: 'shows',
+            dateKey: 'airDate',
+            containerId: 'upcomingContainer',
+            updatedId: 'upcomingUpdated',
+            render: createUpcomingElement,
+            label: 'returning season(s)',
+            emptyNoScan: 'NO UPCOMING SEASONS FOUND. THE SERVER SCAN MAY NOT HAVE RUN YET.',
+            emptyNone: 'NO NEW SEASONS ANNOUNCED RIGHT NOW. CHECK BACK LATER.',
+        });
+
+        loadUpcomingFeed({
+            view: 'movies',
+            node: 'upcomingMovies',
+            listKey: 'movies',
+            dateKey: 'releaseDate',
+            containerId: 'upcomingMoviesContainer',
+            updatedId: 'upcomingMoviesUpdated',
+            render: createMovieElement,
+            label: 'upcoming film(s)',
+            emptyNoScan: 'NO UPCOMING FILMS FOUND. THE SERVER SCAN MAY NOT HAVE RUN YET.',
+            emptyNone: 'NOTHING ON THE HORIZON RIGHT NOW. CHECK BACK LATER.',
+        });
+
+        // Restore whichever sub-view was open last
+        switchUpcomingView(currentUpcomingView);
 
         // ========================================
         // COLLAPSIBLE FORM TOGGLE
