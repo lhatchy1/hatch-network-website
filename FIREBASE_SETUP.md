@@ -99,6 +99,13 @@ To secure your database and allow users to edit their own requests, update your 
       ".read": true,
       ".write": false
     },
+    "upcomingRequested": {
+      ".read": true,
+      "$key": {
+        ".write": "auth != null && (!data.exists() || auth.token.email != null)",
+        ".validate": "newData.hasChildren(['title', 'kind', 'requestedAt'])"
+      }
+    },
     "serverStatus": {
       ".read": true,
       ".write": "auth != null && auth.token.email != null"
@@ -123,6 +130,12 @@ To secure your database and allow users to edit their own requests, update your 
 **Upcoming Seasons and Films:**
 - ✅ **Anyone can READ** the `upcoming` and `upcomingMovies` feeds (public viewing)
 - ✅ **Only service account can WRITE** them (via `update_upcoming.py`)
+
+**Upcoming Requested markers:**
+- ✅ **Anyone can READ** which upcoming items have already been requested
+- ✅ **Any signed-in user (including anonymous) can CREATE** a marker &mdash; that's what the REQUEST button on an upcoming row writes
+- ✅ **Only admins can DELETE or change** a marker (to put an item back in the list)
+- ✅ **Data validation** requires title, kind and requestedAt
 
 **Server Status:**
 - ✅ **Anyone can READ** status (public viewing)
