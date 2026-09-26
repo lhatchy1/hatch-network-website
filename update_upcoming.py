@@ -2,9 +2,15 @@
 """
 Upcoming Seasons Updater for Firebase
 
-Walks the Plex TV libraries, asks TVmaze whether any of those shows has a new
-season on the way, and writes the results to the Firebase Realtime Database so
-the website can render them without needing an API key of its own.
+Two feeds, written to the Firebase Realtime Database so the website can render
+them without needing an API key of its own:
+
+  upcoming        - TV shows already in the Plex library that have a new season
+                    on the way (TVmaze, no key needed)
+  upcomingMovies  - upcoming cinema and digital film releases in your region,
+                    by popularity (TMDB, free API key needed)
+
+The film feed is skipped, with a note, until TMDB_API_KEY is set.
 
 Designed to run alongside update_plex_stats.py on the Plex server, but on a
 daily schedule rather than every 30 minutes (air dates rarely change hourly,
@@ -44,6 +50,18 @@ MAX_DAYS_AHEAD = 365
 
 # Where to remember Plex show -> TVmaze show ID lookups between runs
 CACHE_PATH = os.environ.get('UPCOMING_CACHE_PATH', 'tvmaze_cache.json')
+
+# TMDB (films) - free key from https://www.themoviedb.org/settings/api
+# Either the v3 "API Key" or the v4 "Read Access Token" works here.
+TMDB_API_KEY = os.environ.get('TMDB_API_KEY', 'YOUR_TMDB_API_KEY_HERE')
+
+# Region whose release dates to use (ISO 3166-1), and language for titles
+MOVIE_REGION = 'CH'
+MOVIE_LANGUAGE = 'en-GB'
+
+# Only report films releasing within this many days, and at most this many
+MAX_MOVIE_DAYS_AHEAD = 120
+MAX_MOVIES = 30
 
 # ========================================
 # TVMAZE HELPERS
@@ -155,6 +173,167 @@ def resolve_tvmaze_id(show, cache):
         print(f'[TVmaze] No match for "{show.title}"')
 
     return tvmaze_id
+
+
+# ========================================
+# TMDB HELPERS (films)
+# ========================================
+
+TMDB_BASE = 'https://api.themoviedb.org/3'
+TMDB_DELAY_SECONDS = 0.1
+
+# TMDB release types: 2 = theatrical (limited), 3 = theatrical, 4 = digital
+CINEMA_RELEASE_TYPES = {2, 3}
+DIGITAL_RELEASE_TYPES = {4}
+
+
+def tmdb_configured():
+    return bool(TMDB_API_KEY) and TMDB_API_KEY != 'YOUR_TMDB_API_KEY_HERE'
+
+
+def tmdb_get(path, params=None):
+    """GET a TMDB endpoint, returning None on 404 and retrying on rate limits."""
+    params = dict(params or {})
+    headers = {}
+    # v4 read access tokens are JWTs and go in a header; v3 keys go in the query
+    if TMDB_API_KEY.startswith('eyJ'):
+        headers['Authorization'] = f'Bearer {TMDB_API_KEY}'
+    else:
+        params['api_key'] = TMDB_API_KEY
+
+    url = f'{TMDB_BASE}{path}'
+
+    for attempt in range(3):
+        time.sleep(TMDB_DELAY_SECONDS)
+        try:
+            response = _session.get(url, params=params, headers=headers, timeout=20)
+        except requests.RequestException as e:
+            print(f'[TMDB] Request failed ({e}); retrying...')
+            time.sleep(2 ** attempt)
+            continue
+
+        if response.status_code == 404:
+            return None
+        if response.status_code == 401:
+            print('[TMDB] Unauthorised - check TMDB_API_KEY')
+            return None
+        if response.status_code == 429:
+            print('[TMDB] Rate limited; backing off...')
+            time.sleep(5 * (attempt + 1))
+            continue
+        if response.ok:
+            return response.json()
+
+        print(f'[TMDB] Unexpected status {response.status_code} for {url}')
+        time.sleep(2 ** attempt)
+
+    return None
+
+
+def parse_iso_date(raw):
+    try:
+        return datetime.strptime((raw or '')[:10], '%Y-%m-%d').date()
+    except ValueError:
+        return None
+
+
+def regional_release_dates(movie_id, today, horizon):
+    """Earliest upcoming cinema and digital dates for MOVIE_REGION, or None."""
+    data = tmdb_get(f'/movie/{movie_id}/release_dates')
+    cinema = digital = None
+
+    for country in (data or {}).get('results', []):
+        if country.get('iso_3166_1') != MOVIE_REGION:
+            continue
+        for release in country.get('release_dates', []):
+            when = parse_iso_date(release.get('release_date'))
+            if when is None or not (today <= when <= horizon):
+                continue
+            kind = release.get('type')
+            if kind in CINEMA_RELEASE_TYPES and (cinema is None or when < cinema):
+                cinema = when
+            elif kind in DIGITAL_RELEASE_TYPES and (digital is None or when < digital):
+                digital = when
+
+    return cinema, digital
+
+
+def scan_upcoming_movies():
+    """Most popular films releasing in the region soon, or None if TMDB isn't set up."""
+    if not tmdb_configured():
+        print('[TMDB] No API key set - skipping films (set TMDB_API_KEY to enable)')
+        return None
+
+    today = date.today()
+    horizon = today + timedelta(days=MAX_MOVIE_DAYS_AHEAD)
+
+    genre_list = tmdb_get('/genre/movie/list', {'language': MOVIE_LANGUAGE}) or {}
+    genres = {g['id']: g['name'] for g in genre_list.get('genres', []) if 'id' in g and 'name' in g}
+
+    candidates = []
+    for page in (1, 2, 3):
+        data = tmdb_get('/discover/movie', {
+            'region': MOVIE_REGION,
+            'language': MOVIE_LANGUAGE,
+            'with_release_type': '2|3|4',
+            'release_date.gte': today.isoformat(),
+            'release_date.lte': horizon.isoformat(),
+            'sort_by': 'popularity.desc',
+            'page': page,
+        })
+        if not data:
+            break
+        candidates.extend(data.get('results', []))
+        if page >= (data.get('total_pages') or 1):
+            break
+
+    print(f'[TMDB] {len(candidates)} candidate film(s) in the next {MAX_MOVIE_DAYS_AHEAD} days')
+
+    movies = []
+    for candidate in candidates:
+        if len(movies) >= MAX_MOVIES:
+            break
+
+        title = candidate.get('title')
+        movie_id = candidate.get('id')
+        if not title or not movie_id:
+            continue
+
+        cinema, digital = regional_release_dates(movie_id, today, horizon)
+
+        if cinema is None and digital is None:
+            # Regional detail is thin for this one - trust the date discover gave us
+            cinema = parse_iso_date(candidate.get('release_date'))
+            if cinema is None or not (today <= cinema <= horizon):
+                continue
+
+        primary = min(d for d in (cinema, digital) if d is not None)
+
+        entry = {
+            'title': title,
+            'tmdbId': movie_id,
+            'releaseDate': primary.isoformat(),
+            'releaseType': 'cinema' if primary == cinema else 'digital',
+            'popularity': round(candidate.get('popularity') or 0, 1),
+        }
+        if cinema:
+            entry['cinemaDate'] = cinema.isoformat()
+        if digital:
+            entry['digitalDate'] = digital.isoformat()
+
+        names = [genres[g] for g in candidate.get('genre_ids', []) if g in genres][:3]
+        if names:
+            entry['genres'] = names
+
+        print(f'[Found] {title} - {entry["releaseType"]} {entry["releaseDate"]}')
+        movies.append(entry)
+
+    movies.sort(key=lambda entry: (entry['releaseDate'], entry['title']))
+    return movies
+
+
+def comparable_movies(movies):
+    return [(m.get('title'), m.get('releaseType'), m.get('releaseDate')) for m in movies]
 
 
 # ========================================
@@ -291,37 +470,25 @@ def init_firebase():
         })
 
 
-def update_firebase(upcoming):
-    """Write the results, only bumping changedAt when the list actually changed."""
-    try:
-        print('[Firebase] Initializing Firebase...')
-        init_firebase()
+def write_feed(node, list_key, items, fingerprint):
+    """Write a feed, only bumping changedAt when its contents actually changed."""
+    ref = db.reference(node)
+    existing = ref.get() or {}
+    existing_items = existing.get(list_key) or []
+    if isinstance(existing_items, dict):
+        existing_items = list(existing_items.values())
 
-        ref = db.reference('upcoming')
-        existing = ref.get() or {}
-        existing_shows = existing.get('shows') or []
-        if isinstance(existing_shows, dict):
-            existing_shows = list(existing_shows.values())
+    now_ms = int(time.time() * 1000)
+    changed = fingerprint(existing_items) != fingerprint(items)
 
-        now_ms = int(time.time() * 1000)
-        changed = comparable(existing_shows) != comparable(upcoming)
+    ref.set({
+        'updatedAt': now_ms,
+        'changedAt': now_ms if changed else existing.get('changedAt', now_ms),
+        list_key: items,
+    })
 
-        payload = {
-            'updatedAt': now_ms,
-            'changedAt': now_ms if changed else existing.get('changedAt', now_ms),
-            'shows': upcoming,
-        }
-
-        ref.set(payload)
-
-        if changed:
-            print(f'[Firebase] Updated with {len(upcoming)} season(s) - list changed')
-        else:
-            print(f'[Firebase] Updated with {len(upcoming)} season(s) - no change')
-
-    except Exception as e:
-        print(f'[Firebase] Error updating Firebase: {e}')
-        sys.exit(1)
+    state = 'list changed' if changed else 'no change'
+    print(f'[Firebase] {node}: {len(items)} item(s) - {state}')
 
 
 # ========================================
@@ -348,9 +515,29 @@ def main():
         # Keep whatever lookups we managed, even if the scan died part-way
         save_cache(cache)
 
-    update_firebase(upcoming)
+    try:
+        print('[Firebase] Initializing Firebase...')
+        init_firebase()
+        write_feed('upcoming', 'shows', upcoming, comparable)
+    except Exception as e:
+        print(f'[Firebase] Error updating Firebase: {e}')
+        sys.exit(1)
 
-    print('[Success] Upcoming seasons updated!')
+    # Films are independent of the TV scan - a TMDB problem must not undo the above
+    try:
+        movies = scan_upcoming_movies()
+    except Exception as e:
+        print(f'[TMDB] Film scan failed: {e}')
+        movies = None
+
+    if movies is not None:
+        try:
+            write_feed('upcomingMovies', 'movies', movies, comparable_movies)
+        except Exception as e:
+            print(f'[Firebase] Error writing films: {e}')
+            sys.exit(1)
+
+    print('[Success] Upcoming feeds updated!')
     print('=' * 50)
 
 

@@ -14,6 +14,10 @@
       ".read": true,
       ".write": false
     },
+    "upcomingMovies": {
+      ".read": true,
+      ".write": false
+    },
     "serverStatus": {
       ".read": true,
       ".write": "auth != null && auth.token.email != null"
