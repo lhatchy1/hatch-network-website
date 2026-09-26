@@ -571,6 +571,33 @@
             51%, 100% { opacity: 0.25; }
         }
 
+        /* "Request this" button on upcoming rows */
+        .upcoming-request-btn {
+            background: none;
+            border: 1px solid var(--border-strong);
+            border-radius: 3px;
+            color: var(--accent);
+            cursor: pointer;
+            padding: 2px 9px;
+            font-family: var(--font-mono);
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            transition: background-color 0.15s, border-color 0.15s, opacity 0.15s;
+        }
+
+        .upcoming-request-btn:hover {
+            background-color: var(--overlay-light);
+            border-color: var(--accent);
+        }
+
+        .upcoming-request-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
         /* Sub-tabs inside a tab */
         .sub-tabs {
             display: flex;
@@ -1179,6 +1206,21 @@
     <!-- Admin Toggle Button -->
     <button class="admin-toggle" id="adminToggle">ADMIN MODE</button>
 
+    <!-- Request-from-Upcoming Name Modal -->
+    <div class="modal" id="requestNameModal">
+        <div class="modal-content">
+            <h2>WHO'S ASKING?</h2>
+            <p class="modal-note">Your name goes on the request so the admins know who wants it. This browser will remember it.</p>
+            <label for="requestNameInput">YOUR NAME</label>
+            <input type="text" id="requestNameInput" placeholder="e.g., Liam" autocomplete="name">
+            <div class="form-error" id="requestNameError">Please enter your name.</div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="confirmRequestName()">REQUEST</button>
+                <button class="btn" onclick="closeRequestNameModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Password Modal -->
     <div class="modal" id="passwordModal">
         <div class="modal-content">
@@ -1553,6 +1595,7 @@
             try {
                 // Add to Firebase
                 const newRequestRef = await requestsRef.push(formData);
+                rememberRequesterName(formData.requesterName);
 
                 // Send email via FormSubmit
                 await sendEmailNotification(formData);
@@ -2325,6 +2368,160 @@ This request has been added to your Firebase database and is visible to all user
             document.getElementById('notification-upcoming').style.display = anyUnseen && !mainActive ? 'block' : 'none';
         }
 
+        // ---- Requesting straight from an upcoming row ----
+
+        const REQUESTER_NAME_KEY = 'requesterName';
+
+        function getRequesterName() {
+            try { return (localStorage.getItem(REQUESTER_NAME_KEY) || '').trim(); } catch (e) { return ''; }
+        }
+
+        function rememberRequesterName(name) {
+            try { localStorage.setItem(REQUESTER_NAME_KEY, name); } catch (e) { /* ignore */ }
+            const field = document.getElementById('requesterName');
+            if (field && !field.value) field.value = name;
+        }
+
+        // Firebase keys can't contain . # $ [ ] / - and this keeps them readable
+        function slugify(text) {
+            return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'untitled';
+        }
+
+        function upcomingKey(view, item) {
+            if (view === 'movies') {
+                const id = Number(item.tmdbId);
+                return Number.isInteger(id) && id > 0 ? `movie_${id}` : `movie_${slugify(item.title)}`;
+            }
+            return `tv_${slugify(item.title)}_s${Number(item.season) || 0}`;
+        }
+
+        // Keys of upcoming items someone has already turned into a request
+        const requestedKeys = new Set();
+        let pendingUpcomingRequest = null;
+
+        function requestUpcoming(view, item, button) {
+            const name = getRequesterName();
+            if (!name) {
+                pendingUpcomingRequest = { view, item };
+                document.getElementById('requestNameError').style.display = 'none';
+                document.getElementById('requestNameInput').value = '';
+                document.getElementById('requestNameModal').classList.add('active');
+                setTimeout(() => document.getElementById('requestNameInput').focus(), 50);
+                return;
+            }
+            submitUpcomingRequest(view, item, name, button);
+        }
+
+        function confirmRequestName() {
+            const input = document.getElementById('requestNameInput');
+            const name = input.value.trim();
+            if (!name) {
+                document.getElementById('requestNameError').style.display = 'block';
+                input.focus();
+                return;
+            }
+            rememberRequesterName(name);
+            const pending = pendingUpcomingRequest;
+            closeRequestNameModal();
+            if (pending) submitUpcomingRequest(pending.view, pending.item, name, null);
+        }
+
+        function closeRequestNameModal() {
+            pendingUpcomingRequest = null;
+            document.getElementById('requestNameModal').classList.remove('active');
+        }
+
+        document.getElementById('requestNameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') confirmRequestName();
+        });
+
+        function describeUpcomingItem(view, item) {
+            const date = parseAirDate(view === 'movies' ? item.releaseDate : item.airDate);
+            const when = date ? formatAirDate(date) : 'date TBC';
+            if (view === 'movies') {
+                const kind = item.releaseType === 'digital' ? 'Digital' : 'Cinema';
+                return {
+                    type: 'Movie',
+                    year: date ? String(date.getFullYear()) : '',
+                    notes: `${kind} release ${when}. Requested from the Upcoming tab.`,
+                };
+            }
+            const network = item.network ? ` on ${item.network}` : '';
+            return {
+                type: 'TV Show',
+                year: '',
+                notes: `Season ${item.season} - premieres ${when}${network}. Requested from the Upcoming tab.`,
+            };
+        }
+
+        async function submitUpcomingRequest(view, item, name, button) {
+            const errorMsg = document.getElementById('errorMessage');
+            const successMsg = document.getElementById('successMessage');
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            if (!currentUserId) {
+                errorMsg.textContent = 'ERROR: Not signed in yet. Give it a second and try again.';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            if (button) button.disabled = true;
+
+            const details = describeUpcomingItem(view, item);
+            const formData = {
+                requesterName: name,
+                type: details.type,
+                title: item.title,
+                year: details.year,
+                notes: details.notes,
+                status: 'New',
+                timestamp: Date.now(),
+                userId: currentUserId,
+            };
+
+            try {
+                // Same shape as the form, so the queue treats it like any other request
+                await requestsRef.push(formData);
+
+                // Best effort - the request is already saved if this fails
+                try {
+                    await sendEmailNotification(formData);
+                } catch (e) {
+                    console.warn('[Upcoming] Email notification failed:', e);
+                }
+
+                // Mark it so it drops out of the list for everyone, and stays out across rescans
+                await database.ref(`upcomingRequested/${upcomingKey(view, item)}`).set({
+                    title: item.title,
+                    kind: view === 'movies' ? 'movie' : 'tv',
+                    requestedBy: name,
+                    requestedAt: Date.now(),
+                });
+
+                successMsg.textContent = `REQUESTED "${item.title}". It's in the queue.`;
+                successMsg.style.display = 'block';
+                successMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                setTimeout(() => { successMsg.style.display = 'none'; }, 5000);
+
+            } catch (error) {
+                console.error('[Upcoming] Error requesting item:', error);
+                errorMsg.textContent = `ERROR: ${error.message}. Please try again or contact the administrator.`;
+                errorMsg.style.display = 'block';
+                if (button) button.disabled = false;
+            }
+        }
+
+        function createRequestButton(view, item) {
+            const btn = document.createElement('button');
+            btn.className = 'upcoming-request-btn';
+            btn.type = 'button';
+            btn.textContent = 'REQUEST';
+            btn.title = 'Add this to the request queue';
+            btn.addEventListener('click', () => requestUpcoming(view, item, btn));
+            return btn;
+        }
+
         // ---- Row renderers ----
 
         function createUpcomingElement(show) {
@@ -2346,8 +2543,14 @@ This request has been added to your Firebase database and is visible to all user
                 <span class="upcoming-title">${escapeHtml(show.title)}</span>
                 <span class="upcoming-season">SEASON ${escapeHtml(show.season)}</span>
                 <span class="upcoming-countdown">${formatCountdown(days)}</span>
-                ${meta.length ? `<div class="upcoming-meta">${meta.join(' &middot; ')}</div>` : ''}
             `;
+            item.appendChild(createRequestButton('tv', show));
+            if (meta.length) {
+                const metaEl = document.createElement('div');
+                metaEl.className = 'upcoming-meta';
+                metaEl.innerHTML = meta.join(' &middot; ');
+                item.appendChild(metaEl);
+            }
 
             return item;
         }
@@ -2378,83 +2581,114 @@ This request has been added to your Firebase database and is visible to all user
                 <span class="upcoming-title">${title}</span>
                 <span class="upcoming-season">${isDigital ? 'DIGITAL' : 'CINEMA'}</span>
                 <span class="upcoming-countdown">${formatCountdown(days)}</span>
-                ${meta.length ? `<div class="upcoming-meta">${meta.join(' &middot; ')}</div>` : ''}
             `;
+            item.appendChild(createRequestButton('movies', movie));
+            if (meta.length) {
+                const metaEl = document.createElement('div');
+                metaEl.className = 'upcoming-meta';
+                metaEl.innerHTML = meta.join(' &middot; ');
+                item.appendChild(metaEl);
+            }
 
             return item;
         }
 
-        // ---- Feed loader shared by both views ----
+        // ---- Feeds: one loader, re-rendered whenever the feed or the requested set changes ----
 
-        function loadUpcomingFeed(feed) {
+        const UPCOMING_FEEDS = [
+            {
+                view: 'tv',
+                node: 'upcoming',
+                listKey: 'shows',
+                dateKey: 'airDate',
+                containerId: 'upcomingContainer',
+                updatedId: 'upcomingUpdated',
+                render: createUpcomingElement,
+                label: 'returning season(s)',
+                emptyNoScan: 'NO UPCOMING SEASONS FOUND. THE SERVER SCAN MAY NOT HAVE RUN YET.',
+                emptyNone: 'NO NEW SEASONS ANNOUNCED RIGHT NOW. CHECK BACK LATER.',
+                data: undefined,
+            },
+            {
+                view: 'movies',
+                node: 'upcomingMovies',
+                listKey: 'movies',
+                dateKey: 'releaseDate',
+                containerId: 'upcomingMoviesContainer',
+                updatedId: 'upcomingMoviesUpdated',
+                render: createMovieElement,
+                label: 'upcoming film(s)',
+                emptyNoScan: 'NO UPCOMING FILMS FOUND. THE SERVER SCAN MAY NOT HAVE RUN YET.',
+                emptyNone: 'NOTHING ON THE HORIZON RIGHT NOW. CHECK BACK LATER.',
+                data: undefined,
+            },
+        ];
+
+        function renderUpcomingFeed(feed) {
+            if (feed.data === undefined) return; // still loading
             const container = document.getElementById(feed.containerId);
             const updatedEl = document.getElementById(feed.updatedId);
+            const data = feed.data;
+            container.innerHTML = '';
+            updatedEl.textContent = '';
 
-            database.ref(feed.node).on('value', (snapshot) => {
-                const data = snapshot.val();
-                container.innerHTML = '';
-                updatedEl.textContent = '';
-
-                if (!data || !data[feed.listKey]) {
-                    container.innerHTML = `<div class="no-requests">${feed.emptyNoScan}</div>`;
-                    upcomingChangedAt[feed.view] = 0;
-                    refreshUpcomingPips();
-                    return;
-                }
-
-                // Firebase stores arrays as objects when keys are sparse, so normalise
-                const raw = Array.isArray(data[feed.listKey]) ? data[feed.listKey] : Object.values(data[feed.listKey]);
-
-                // Drop anything already past, in case the scan is stale
-                const items = raw
-                    .filter(item => item && parseAirDate(item[feed.dateKey]) && daysUntil(parseAirDate(item[feed.dateKey])) >= 0)
-                    .sort((a, b) => a[feed.dateKey].localeCompare(b[feed.dateKey]));
-
-                if (items.length === 0) {
-                    container.innerHTML = `<div class="no-requests">${feed.emptyNone}</div>`;
-                } else {
-                    items.forEach(item => container.appendChild(feed.render(item)));
-                }
-
-                if (data.updatedAt) {
-                    updatedEl.textContent = `Last scanned: ${new Date(data.updatedAt).toLocaleString('en-GB')}`;
-                }
-
-                upcomingChangedAt[feed.view] = items.length && data.changedAt ? data.changedAt : 0;
+            if (!data || !data[feed.listKey]) {
+                container.innerHTML = `<div class="no-requests">${feed.emptyNoScan}</div>`;
+                upcomingChangedAt[feed.view] = 0;
                 refreshUpcomingPips();
+                return;
+            }
 
-                console.log(`[Upcoming] Loaded ${items.length} ${feed.label}`);
-            }, (error) => {
-                console.error(`[Upcoming] Error loading ${feed.label}:`, error);
-                container.innerHTML = `<div class="no-requests">ERROR LOADING ${feed.label.toUpperCase()}.</div>`;
-            });
+            // Firebase stores arrays as objects when keys are sparse, so normalise
+            const raw = Array.isArray(data[feed.listKey]) ? data[feed.listKey] : Object.values(data[feed.listKey]);
+
+            // Drop anything already past (a stale scan) or already requested by someone
+            const items = raw
+                .filter(item => item && parseAirDate(item[feed.dateKey]) && daysUntil(parseAirDate(item[feed.dateKey])) >= 0)
+                .filter(item => !requestedKeys.has(upcomingKey(feed.view, item)))
+                .sort((a, b) => a[feed.dateKey].localeCompare(b[feed.dateKey]));
+
+            if (items.length === 0) {
+                container.innerHTML = `<div class="no-requests">${feed.emptyNone}</div>`;
+            } else {
+                items.forEach(item => container.appendChild(feed.render(item)));
+            }
+
+            if (data.updatedAt) {
+                updatedEl.textContent = `Last scanned: ${new Date(data.updatedAt).toLocaleString('en-GB')}`;
+            }
+
+            upcomingChangedAt[feed.view] = items.length && data.changedAt ? data.changedAt : 0;
+            refreshUpcomingPips();
         }
 
-        loadUpcomingFeed({
-            view: 'tv',
-            node: 'upcoming',
-            listKey: 'shows',
-            dateKey: 'airDate',
-            containerId: 'upcomingContainer',
-            updatedId: 'upcomingUpdated',
-            render: createUpcomingElement,
-            label: 'returning season(s)',
-            emptyNoScan: 'NO UPCOMING SEASONS FOUND. THE SERVER SCAN MAY NOT HAVE RUN YET.',
-            emptyNone: 'NO NEW SEASONS ANNOUNCED RIGHT NOW. CHECK BACK LATER.',
+        UPCOMING_FEEDS.forEach(feed => {
+            database.ref(feed.node).on('value', (snapshot) => {
+                feed.data = snapshot.val();
+                renderUpcomingFeed(feed);
+                console.log(`[Upcoming] Loaded ${feed.label}`);
+            }, (error) => {
+                console.error(`[Upcoming] Error loading ${feed.label}:`, error);
+                document.getElementById(feed.containerId).innerHTML =
+                    `<div class="no-requests">ERROR LOADING ${feed.label.toUpperCase()}.</div>`;
+            });
         });
 
-        loadUpcomingFeed({
-            view: 'movies',
-            node: 'upcomingMovies',
-            listKey: 'movies',
-            dateKey: 'releaseDate',
-            containerId: 'upcomingMoviesContainer',
-            updatedId: 'upcomingMoviesUpdated',
-            render: createMovieElement,
-            label: 'upcoming film(s)',
-            emptyNoScan: 'NO UPCOMING FILMS FOUND. THE SERVER SCAN MAY NOT HAVE RUN YET.',
-            emptyNone: 'NOTHING ON THE HORIZON RIGHT NOW. CHECK BACK LATER.',
+        database.ref('upcomingRequested').on('value', (snapshot) => {
+            requestedKeys.clear();
+            const val = snapshot.val();
+            if (val) Object.keys(val).forEach(key => requestedKeys.add(key));
+            UPCOMING_FEEDS.forEach(renderUpcomingFeed);
+        }, (error) => {
+            console.error('[Upcoming] Error loading requested markers:', error);
         });
+
+        // Prefill the form with the name this browser used last time
+        (function prefillRequesterName() {
+            const name = getRequesterName();
+            const field = document.getElementById('requesterName');
+            if (name && field && !field.value) field.value = name;
+        })();
 
         // Restore whichever sub-view was open last
         switchUpcomingView(currentUpcomingView);

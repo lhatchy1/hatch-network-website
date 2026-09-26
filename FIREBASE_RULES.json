@@ -18,6 +18,13 @@
       ".read": true,
       ".write": false
     },
+    "upcomingRequested": {
+      ".read": true,
+      "$key": {
+        ".write": "auth != null && (!data.exists() || auth.token.email != null)",
+        ".validate": "newData.hasChildren(['title', 'kind', 'requestedAt'])"
+      }
+    },
     "serverStatus": {
       ".read": true,
       ".write": "auth != null && auth.token.email != null"

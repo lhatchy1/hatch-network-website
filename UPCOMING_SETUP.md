@@ -59,6 +59,22 @@ rules (the full rule set lives in [FIREBASE_RULES.json](FIREBASE_RULES.json)):
 
 Public read, service-account-only write &mdash; exactly like `plexStats`.
 
+Also add the `upcomingRequested` node, which backs the **REQUEST** button on
+each upcoming row:
+
+```json
+"upcomingRequested": {
+  ".read": true,
+  "$key": {
+    ".write": "auth != null && (!data.exists() || auth.token.email != null)",
+    ".validate": "newData.hasChildren(['title', 'kind', 'requestedAt'])"
+  }
+}
+```
+
+Anyone signed in (visitors are signed in anonymously) can create a marker;
+only admins can remove one.
+
 ## Step 2b: Get a TMDB API Key (for films)
 
 TVmaze needs no key, but TMDB does. It's free and takes a couple of minutes:
@@ -217,6 +233,27 @@ The script writes two nodes. `upcoming` holds TV:
   and air date for TV; title, type and date for films). That is what drives the
   green notification pips, so a daily scan that finds nothing new doesn't nag
   anyone. Each sub-tab has its own pip, and the UPCOMING tab's pip rolls them up
+
+## Requesting From the List
+
+Every upcoming row has a **REQUEST** button. Pressing it:
+
+1. Creates a request in the queue with the same fields the form uses (type,
+   title, year for films, and a note saying which season or release it is and
+   that it came from the Upcoming tab), owned by the visitor so they can edit
+   or delete it like any other
+2. Sends the usual email notification
+3. Writes a marker to `upcomingRequested/<key>` so the row disappears for
+   **everyone** and stays gone across the daily rescans
+
+The first press asks for a name, which the browser then remembers (and uses
+to prefill the request form). Keys look like `tv_severance_s3` and
+`movie_1085868`.
+
+To put an item back in the list, delete its marker under `upcomingRequested`
+in the Firebase console (admin only by the rules). Markers for dates that have
+passed are harmless &mdash; the list already filters past items &mdash; and
+can be cleared out whenever you like.
 
 ## How Shows Are Matched
 
