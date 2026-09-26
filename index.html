@@ -362,6 +362,16 @@
             border-bottom: none;
         }
 
+        .panel-link {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid var(--border-strong);
+        }
+
+        .panel-link:hover {
+            border-bottom-color: var(--accent);
+        }
+
         /* Forms */
         .form-group {
             margin-bottom: 12px;
@@ -1082,6 +1092,9 @@
                 </p>
                 <p class="panel-note">
                     💡 Please check if your request is already available on Plex before submitting.
+                </p>
+                <p class="panel-note">
+                    📅 After something new? The <a href="#" class="panel-link" onclick="switchTab('upcoming'); return false;">UPCOMING</a> tab lists new seasons of shows on the server and films on the way &mdash; each one has a REQUEST button, so you can ask for it straight from there.
                 </p>
                 <form id="requestForm">
                 <div class="form-group">
