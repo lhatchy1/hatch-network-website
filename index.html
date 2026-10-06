@@ -205,6 +205,52 @@
             background-color: var(--error);
         }
 
+        /* Hatchbox link - sits in the header chip row, styled as a button */
+        .hatchbox-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border: 1px solid var(--border-strong);
+            border-radius: 3px;
+            background-color: var(--overlay-light);
+            color: var(--accent);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            vertical-align: middle;
+            transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+        }
+
+        .hatchbox-link svg {
+            width: 12px;
+            height: 12px;
+            flex-shrink: 0;
+        }
+
+        .hatchbox-link .arrow {
+            transition: transform 0.15s;
+        }
+
+        .hatchbox-link:hover,
+        .hatchbox-link:focus-visible {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .hatchbox-link:hover .arrow,
+        .hatchbox-link:focus-visible .arrow {
+            transform: translateX(2px);
+        }
+
+        .hatchbox-link:active {
+            opacity: 0.8;
+        }
+
         /* Plex Stats Strip */
         .plex-stats {
             display: flex;
@@ -1039,6 +1085,17 @@
                     <span class="status-dot online" id="statusDot"></span>
                     <span class="status-value" id="statusValue">Online</span>
                 </span>
+                <a class="hatchbox-link" href="http://hatchbox.local/" target="_blank" rel="noopener"
+                   title="Open Hatchbox (hatchbox.local) - works on the home network">
+                    <svg viewBox="0 0 64 64" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+                        <path d="M12 24 32 14l20 10v18L32 52 12 42z"/>
+                        <path d="M12 24 32 34l20-10"/>
+                        <path d="M32 34v18"/>
+                        <path d="M22 19l20 10"/>
+                    </svg>
+                    Hatchbox
+                    <span class="arrow" aria-hidden="true">&rarr;</span>
+                </a>
             </h1>
         </div>
 
